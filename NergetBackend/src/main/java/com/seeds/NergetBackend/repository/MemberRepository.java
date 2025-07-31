@@ -2,8 +2,7 @@ package com.seeds.NergetBackend.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.lang.reflect.Member;
+import com.seeds.NergetBackend.entity.Member; // ✅ 우리가 만든 Member 엔티티
 import java.util.Optional;
 
 @Repository
