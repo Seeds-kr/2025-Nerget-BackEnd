@@ -1,13 +1,16 @@
 package com.seeds.NergetBackend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "members")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Member {
 
     @Id
