@@ -1,8 +1,10 @@
 package com.seeds.NergetBackend.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class GoogleLoginDto {
     private String idToken;
 }

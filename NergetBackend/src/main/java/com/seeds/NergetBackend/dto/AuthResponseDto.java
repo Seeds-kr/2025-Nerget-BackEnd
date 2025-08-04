@@ -1,12 +1,12 @@
 package com.seeds.NergetBackend.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 @AllArgsConstructor
 public class AuthResponseDto {
-    private String accessToken;
+    private String token;
     private String nickname;
-    private boolean isNewMember;
+    private boolean isNew;
 }

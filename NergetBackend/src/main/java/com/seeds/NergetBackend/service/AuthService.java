@@ -6,11 +6,11 @@ import com.seeds.NergetBackend.oauth.GoogleOAuthService;
 import com.seeds.NergetBackend.oauth.GoogleUser;
 import com.seeds.NergetBackend.repository.MemberRepository;
 import com.seeds.NergetBackend.security.JwtTokenProvider;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,23 +21,20 @@ public class AuthService {
     private final GoogleOAuthService googleOAuthService;
 
     public AuthResponseDto handleGoogleLogin(String idToken) {
-        GoogleUser googleUser = googleOAuthService.verifyToken(idToken);
+        // ✅ 메서드명 수정
+        GoogleUser googleUser = googleOAuthService.verifyIdToken(idToken);
 
-        Optional<Member> existingMember = memberRepository.findByEmail(googleUser.getEmail());
+        Member member = memberRepository.findByEmail(googleUser.getEmail())
+                .orElseGet(() -> {
+                    Member newMember = Member.builder()
+                            .email(googleUser.getEmail())
+                            .nickname(googleUser.getName())
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    return memberRepository.save(newMember);
+                });
 
-        Member member;
-        boolean isNew = false;
-
-        if (existingMember.isPresent()) {
-            member = existingMember.get();
-        } else {
-            member = new Member();
-            member.setEmail(googleUser.getEmail());
-            member.setNickname(googleUser.getName());
-            member.setCreatedAt(LocalDateTime.now());
-            member = memberRepository.save(member);
-            isNew = true;
-        }
+        boolean isNew = member.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(5));
 
         String jwt = jwtTokenProvider.createToken(member.getEmail());
 
