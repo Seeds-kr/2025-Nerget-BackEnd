@@ -1,10 +1,14 @@
 package com.seeds.NergetBackend.service;
 
 import com.seeds.NergetBackend.dto.AuthResponseDto;
+import com.seeds.NergetBackend.entity.Member;
+import com.seeds.NergetBackend.oauth.GoogleOAuthService;
+import com.seeds.NergetBackend.oauth.GoogleUser;
+import com.seeds.NergetBackend.repository.MemberRepository;
+import com.seeds.NergetBackend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Member;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
