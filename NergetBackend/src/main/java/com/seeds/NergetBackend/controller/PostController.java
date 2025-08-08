@@ -43,4 +43,25 @@ public class PostController {
         PostResponseDto post = postService.getPostById(id);
         return ResponseEntity.ok(post);
     }
+
+    //게시글 수정
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePost(
+            @PathVariable Long id,
+            @RequestBody PostUpdateRequestDto dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        postService.updatePost(id, dto, userDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePost(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        postService.deletePost(id, userDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
 }

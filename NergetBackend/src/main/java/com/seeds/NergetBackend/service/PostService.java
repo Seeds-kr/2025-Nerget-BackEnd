@@ -34,11 +34,12 @@ public class PostService {
 
         return postList.stream()
                 .map(post -> new PostResponseDto(
-                        post.getPostId(),
+                        post.getId(),
                         post.getTitle(),
                         post.getContent(),
                         post.getImageUrl(),
                         post.getAuthor().getNickname(),
+
                         post.getCreatedAt(),
                         post.getViewCount(),git
                         post.getLikeCount(),
@@ -56,7 +57,7 @@ public class PostService {
         postRepository.save(post);  // 업데이트 반영
 
         return new PostResponseDto(
-                post.getPostId(),
+                post.getId(),
                 post.getTitle(),
                 post.getContent(),
                 post.getImageUrl(),
@@ -67,5 +68,36 @@ public class PostService {
                 post.getCommentCount()
         );
     }
+
+    // 게시글 수정
+    public void updatePost(Long postId, PostUpdateRequestDto dto, String userEmail) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다: " + postId));
+
+        if (!post.getAuthor().getEmail().equals(userEmail)) {
+            throw new SecurityException("게시글 작성자만 수정할 수 있습니다.");
+        }
+
+        post.setTitle(dto.getTitle());
+        post.setContent(dto.getContent());
+        post.setImageUrl(dto.getImageUrl()); // 선택적 변경
+
+        post.setUpdatedAt(LocalDateTime.now());
+
+        postRepository.save(post);
+    }
+
+    // 게시글 삭제
+    public void deletePost(Long postId, String userEmail) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다: " + postId));
+
+        if (!post.getAuthor().getEmail().equals(userEmail)) {
+            throw new SecurityException("게시글 작성자만 삭제할 수 있습니다.");
+        }
+
+        postRepository.delete(post);
+    }
+}
 
 }
