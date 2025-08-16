@@ -21,23 +21,20 @@ public class AuthService {
     private final GoogleOAuthService googleOAuthService;
 
     public AuthResponseDto handleGoogleLogin(String idToken) {
-        // ✅ 메서드명 수정
         GoogleUser googleUser = googleOAuthService.verifyIdToken(idToken);
 
-        Member member = memberRepository.findByEmail(googleUser.getEmail())
-                .orElseGet(() -> {
-                    Member newMember = Member.builder()
-                            .email(googleUser.getEmail())
-                            .nickname(googleUser.getName())
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                    return memberRepository.save(newMember);
-                });
+        var existing = memberRepository.findByEmail(googleUser.getEmail());
+        boolean isNew = existing.isEmpty(); // ✅ 새 회원 여부 정확히 판단
 
-        boolean isNew = member.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(5));
+        Member member = existing.orElseGet(() -> memberRepository.save(
+                Member.builder()
+                        .email(googleUser.getEmail())
+                        .nickname(googleUser.getName())
+                        .createdAt(LocalDateTime.now())
+                        .build()
+        ));
 
         String jwt = jwtTokenProvider.createToken(member.getEmail());
-
         return new AuthResponseDto(jwt, member.getNickname(), isNew);
     }
 }
