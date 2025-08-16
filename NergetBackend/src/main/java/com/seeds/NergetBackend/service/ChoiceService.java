@@ -10,40 +10,66 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChoiceService {
 
-    private final JobService jobService;             // 초기 4장 job 상태/결과 확인
-    private final EmbeddingService embeddingService; // 12장 임베딩 + 집계
+    private final JobService jobService;            // 초기 4장 job 상태/결과 확인
+    private final EmbeddingService embeddingService; // (URI 기반 선택 시 사용)
+    private final VectorStore vectorStore;           // (ID 기반 선택 시 사용)
 
     /**
-     * 스와이프 선택 제출 처리
-     * - jobId가 가리키는 초기 4장 분석이 DONE이면: 그 결과 + 12장 벡터 합성 → MBTI 산출
-     * - 아직 완료 안 됐으면: null 반환 (컨트롤러가 202 Accepted로 응답)
+     * 프론트가 이미지 URI를 보냈을 때 쓰는 버전
      */
     public MbtiResultDto processChoicesOrNull(String jobId, List<String> choiceImageUris) {
-        var status = jobService.getStatus(jobId); // DONE이면 resultVector 있음
+        var status = jobService.getStatus(jobId);
+        if (!"DONE".equals(status.getStatus())) return null;
 
-        if (!"DONE".equals(status.getStatus())) {
-            return null; // 아직 분석 중 → 컨트롤러에서 202 처리
-        }
-
-        // 1) 초기 4장 결과 벡터
         float[] initialVec = status.getResultVector();
 
-        // 2) 스와이프 12장 임베딩 + 집계
+        // URI → 임베딩 → 평균
         List<float[]> choiceVecs = embeddingService.embedAll(choiceImageUris);
-        float[] choiceAgg = embeddingService.aggregate(choiceVecs);
+        float[] choiceAgg = average(choiceVecs);
 
-        // 3) 최종 벡터 합성 (단순 평균, 필요 시 가중치 적용 가능)
-        float[] finalVec = combine(initialVec, choiceAgg);
+        float[] finalVec = combineAverage(initialVec, choiceAgg);
 
-        // 4) MBTI 산출 (모킹: 벡터 앞 4개 차원의 부호 기반)
         String mbti = mockMbti(finalVec);
-        String explanation = "시각적 선호 패턴 기반 예비 결과 (모킹).";
-
+        String explanation = "시각적 선호 패턴 기반 예비 결과 (URI 기반 모킹)";
         return new MbtiResultDto(mbti, explanation, finalVec);
     }
 
-    /** 벡터 합성 (단순 평균) */
-    private float[] combine(float[] a, float[] b) {
+    /**
+     * 서버가 제공한 후보 ID들을 프론트가 제출했을 때 쓰는 버전(AWS 벡터)
+     */
+    public MbtiResultDto processChoicesFromIdsOrNull(String jobId, List<String> selectedIds) {
+        var st = jobService.getStatus(jobId);
+        if (!"DONE".equals(st.getStatus())) return null;
+
+        float[] initialVec = st.getResultVector();
+
+        // ID → 벡터 조회 → 평균
+        List<float[]> selectedVecs = vectorStore.getVectorsByIds(selectedIds);
+        float[] choiceAvg = average(selectedVecs);
+
+        float[] finalVec = combineAverage(initialVec, choiceAvg);
+
+        String mbti = mockMbti(finalVec);
+        String exp  = "초기 선호 + 선택 선호 결합 결과(벡터ID 기반)";
+        return new MbtiResultDto(mbti, exp, finalVec);
+    }
+
+    // ---- 아래는 유틸 메서드들 (없어서 에러 나던 부분) ----
+
+    /** 여러 벡터의 평균 */
+    private float[] average(List<float[]> vecs) {
+        if (vecs == null || vecs.isEmpty()) return new float[0];
+        int dim = vecs.get(0).length;
+        float[] avg = new float[dim];
+        for (float[] v : vecs) {
+            for (int i = 0; i < dim; i++) avg[i] += v[i];
+        }
+        for (int i = 0; i < dim; i++) avg[i] /= vecs.size();
+        return avg;
+    }
+
+    /** 두 벡터의 단순 평균 */
+    private float[] combineAverage(float[] a, float[] b) {
         int n = Math.max(a.length, b.length);
         float[] out = new float[n];
         for (int i = 0; i < n; i++) {
@@ -64,22 +90,5 @@ public class ChoiceService {
                 (s >= 0 ? "S" : "N") +
                 (t >= 0 ? "T" : "F") +
                 (j >= 0 ? "J" : "P");
-    }
-
-    // ChoiceService.java 내에 추가
-    public MbtiResultDto processChoicesFromIdsOrNull(String jobId, List<String> selectedIds) {
-        var st = jobService.getStatus(jobId);
-        if (!"DONE".equals(st.getStatus())) return null;
-
-        float[] initialVec = st.getResultVector();
-        // 새로 추가한 VectorStore 사용 ⭐
-        List<float[]> selectedVecs = vectorStore.getVectorsByIds(selectedIds);
-        float[] choiceAvg = average(selectedVecs);
-        float[] finalVec = combineAverage(initialVec, choiceAvg);
-
-        String mbti = mockMbti(finalVec);
-        String exp  = "초기 선호 + 선택 선호 결합 결과(벡터ID 기반)";
-
-        return new MbtiResultDto(mbti, exp, finalVec);
     }
 }
