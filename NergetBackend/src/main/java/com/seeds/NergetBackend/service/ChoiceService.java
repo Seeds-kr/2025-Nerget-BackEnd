@@ -65,4 +65,21 @@ public class ChoiceService {
                 (t >= 0 ? "T" : "F") +
                 (j >= 0 ? "J" : "P");
     }
+
+    // ChoiceService.java 내에 추가
+    public MbtiResultDto processChoicesFromIdsOrNull(String jobId, List<String> selectedIds) {
+        var st = jobService.getStatus(jobId);
+        if (!"DONE".equals(st.getStatus())) return null;
+
+        float[] initialVec = st.getResultVector();
+        // 새로 추가한 VectorStore 사용 ⭐
+        List<float[]> selectedVecs = vectorStore.getVectorsByIds(selectedIds);
+        float[] choiceAvg = average(selectedVecs);
+        float[] finalVec = combineAverage(initialVec, choiceAvg);
+
+        String mbti = mockMbti(finalVec);
+        String exp  = "초기 선호 + 선택 선호 결합 결과(벡터ID 기반)";
+
+        return new MbtiResultDto(mbti, exp, finalVec);
+    }
 }
