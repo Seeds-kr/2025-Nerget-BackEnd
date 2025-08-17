@@ -13,4 +13,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // 제목 포함 검색 등 커스텀 쿼리도 가능
     List<Post> findByTitleContaining(String keyword);
+
+    Optional<Post> findByIdAndAuthorEmail(Long postId, String email);
 }
