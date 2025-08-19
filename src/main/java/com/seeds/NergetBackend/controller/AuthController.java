@@ -19,4 +19,17 @@ public class AuthController {
         AuthResponseDto response = authService.handleGoogleLogin(loginDto.getIdToken());
         return ResponseEntity.ok(response);
     }
+
+    // AuthController.java 에 임시로 추가
+    @GetMapping("/test-token")
+    public ResponseEntity<AuthResponseDto> getTestToken() {
+        // 테스트하고 싶은 사용자 ID를 지정 (DB에 실제 존재하는 사용자여야 합니다)
+        Long testMemberId = 1L;
+
+        // JwtTokenProvider를 사용하여 토큰 생성
+        String testToken = jwtTokenProvider.createToken(testMemberId, "ROLE_USER"); // createToken은 직접 구현하신 메소드 이름 사용
+
+        AuthResponseDto response = new AuthResponseDto(testToken, "테스트유저");
+        return ResponseEntity.ok(response);
+    }
 }
