@@ -13,7 +13,7 @@ public class FlowService {
 
     private final StorageService storageService;
     private final JobService jobService;
-    private final EmbeddingService embeddingService;
+    private final AiWorkerService aiWorkerService; // ⬅️ EmbeddingService 대신 워커 주입
 
     /** 플로우 식별자 발급 (로그인 직후) */
     public String startFlow() {
@@ -28,10 +28,16 @@ public class FlowService {
         if (files == null || files.isEmpty() || files.size() > 4) {
             throw new IllegalArgumentException("파일은 1~4장이어야 합니다.");
         }
-        // 1) 파일 저장 (현재는 모킹 URI)
+
+        // 1) 파일 저장 (S3 등) → URI 목록 획득
         List<String> uris = storageService.saveInitial(flowId, files);
 
-        // 2) 잡 생성 및 비동기 진행 시작
-        return jobService.startInitialAnalysis(flowId, uris, embeddingService);
+        // 2) Job 생성 (DB에 PENDING으로 기록)
+        var job = jobService.createJob(flowId, uris);
+
+        // 3) 비동기 워커에 실제 임베딩 작업 위임 (즉시 리턴)
+        aiWorkerService.processJob(job.getId(), uris);
+
+        return job.getId();
     }
 }

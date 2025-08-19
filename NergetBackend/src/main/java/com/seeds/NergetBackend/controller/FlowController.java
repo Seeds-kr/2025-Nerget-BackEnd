@@ -1,40 +1,89 @@
+// src/main/java/com/seeds/NergetBackend/controller/FlowController.java
 package com.seeds.NergetBackend.controller;
 
-import com.seeds.NergetBackend.dto.FlowStartResponse;
-import com.seeds.NergetBackend.dto.JobStartResponse;
-import com.seeds.NergetBackend.service.FlowService;
+import com.seeds.NergetBackend.entity.Job;
+import com.seeds.NergetBackend.entity.ImageVector;
+import com.seeds.NergetBackend.service.ImageVectorService;
+import com.seeds.NergetBackend.service.JobService;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/flows")
 @RequiredArgsConstructor
+@RequestMapping("/api/flow")
 public class FlowController {
 
-    private final FlowService flowService;
+    private final JobService jobService;
+    private final ImageVectorService imageVectorService;
 
-    // 1) 플로우 시작: 로그인 직후 호출 → flowId 발급
-    @PostMapping
-    public ResponseEntity<FlowStartResponse> startFlow() {
-        String flowId = flowService.startFlow();
-        return ResponseEntity.ok(new FlowStartResponse(flowId));
+    /**
+     * 업로드 완료 후 호출:
+     * - 이미지 S3 키들을 PENDING으로 등록
+     * - Job 생성 (즉시 응답)
+     * 실제 AI 처리(벡터 산출)는 별도 워커에서 수행 (다음 클래스에서 제공 예정)
+     */
+    @PostMapping("/start")
+    public ResponseEntity<JobStartResp> start(@RequestBody StartReq req) {
+        // 1) 이미지들을 PENDING 등록
+        List<ImageVector> pendings =
+                imageVectorService.registerPendingBatch(req.userId, req.s3Keys, req.metaJson);
+
+        // 2) Job 생성 (벡터 계산은 비동기 워커가 수행)
+        Job job = jobService.createJob(req.userId, req.s3Keys);
+
+        JobStartResp resp = new JobStartResp();
+        resp.jobId = job.getId();
+        resp.countRegistered = pendings.size();
+        return ResponseEntity.ok(resp);
     }
 
-    // 2) 초기 이미지 업로드: 1~4장 업로드 → 분석 잡 시작, jobId 반환
-    @PostMapping(
-            value = "/{flowId}/initial-images",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public ResponseEntity<JobStartResponse> uploadInitialImages(
-            @PathVariable String flowId,
-            @RequestPart("files") List<MultipartFile> files
-    ) {
-        String jobId = flowService.handleInitialUpload(flowId, files);
-        return ResponseEntity.ok(new JobStartResponse(jobId));
+    /**
+     * Job 상태 조회:
+     * - PENDING | RUNNING | DONE | FAILED
+     * - 진행률(0~100)
+     * - (DONE인 경우) 초기 벡터 4D
+     */
+    @GetMapping("/{jobId}/status")
+    public ResponseEntity<JobStatusResp> status(@PathVariable String jobId) {
+        Job job = jobService.getJob(jobId);
+
+        JobStatusResp resp = new JobStatusResp();
+        resp.jobId = job.getId();
+        resp.status = job.getStatus().name();
+        resp.progress = job.getProgress();
+        if (job.getStatus() == Job.Status.DONE) {
+            resp.initVector = job.toArray();
+        } else if (job.getStatus() == Job.Status.FAILED) {
+            resp.error = job.getError();
+        }
+        return ResponseEntity.ok(resp);
+    }
+
+    // ====== 요청/응답 DTO (간단 내장) ======
+
+    @Data
+    public static class StartReq {
+        public String userId;          // 선택: 인증 토큰에서 가져오면 생략 가능
+        public List<String> s3Keys;    // 업로드 완료된 S3 객체 키(최대 4장)
+        public String metaJson;        // 선택: 공통 메타
+    }
+
+    @Data
+    public static class JobStartResp {
+        public String jobId;
+        public int countRegistered;
+    }
+
+    @Data
+    public static class JobStatusResp {
+        public String jobId;
+        public String status;      // PENDING | RUNNING | DONE | FAILED
+        public int progress;       // 0~100
+        public float[] initVector; // DONE일 때만
+        public String error;       // FAILED일 때만
     }
 }

@@ -1,3 +1,4 @@
+// src/main/java/com/seeds/NergetBackend/dto/MbtiResultDto.java
 package com.seeds.NergetBackend.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -8,7 +9,13 @@ import lombok.Getter;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MbtiResultDto {
-    private String mbti;        // 예: "INTP"
-    private String explanation; // 간단 설명(모킹 가능)
+
+    /** 최종 MBTI 문자열 (예: "SFGN") */
+    private String mbti;
+
+    /** 부가 설명 (간단 텍스트) */
+    private String explanation;
+
+    /** 최종 벡터값 (4차원) */
     private float[] finalVector;
 }

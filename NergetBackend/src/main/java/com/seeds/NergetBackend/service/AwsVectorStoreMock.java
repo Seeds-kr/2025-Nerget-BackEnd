@@ -10,7 +10,7 @@ import java.util.Random;
 @Service
 public class AwsVectorStoreMock implements VectorStore {
 
-    private static final int DIM = 8; // 모킹 차원 (실제는 512/768 등)
+    private static final int DIM = 4; // 모킹 차원 (실제는 512/768 등)
 
     @Override
     public List<CandidateImageDto> getRandomCandidates(int count) {

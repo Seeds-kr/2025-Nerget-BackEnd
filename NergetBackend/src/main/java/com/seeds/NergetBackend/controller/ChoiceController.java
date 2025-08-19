@@ -1,31 +1,53 @@
+// src/main/java/com/seeds/NergetBackend/controller/ChoiceController.java
 package com.seeds.NergetBackend.controller;
 
-import com.seeds.NergetBackend.dto.ChoiceRequest;
 import com.seeds.NergetBackend.dto.MbtiResultDto;
-import com.seeds.NergetBackend.dto.PendingDto;
 import com.seeds.NergetBackend.service.ChoiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/flows/{flowId}")
 @RequiredArgsConstructor
+@RequestMapping("/api/choices")
 public class ChoiceController {
 
     private final ChoiceService choiceService;
 
-    @PostMapping("/choices")
-    public ResponseEntity<?> submitChoices(@PathVariable String flowId,
-                                           @RequestBody ChoiceRequest req) {
-        MbtiResultDto result = choiceService.processChoicesOrNull(req.getJobId(), req.getImageIds());
-
-        if (result == null) {
-            // 초기 4장 분석이 아직 끝나지 않은 경우: 퍼센트 없이 202로만 알림
-            return ResponseEntity.accepted()
-                    .body(new PendingDto("INITIAL_PENDING", "초기 분석이 아직 완료되지 않았습니다."));
+    @PostMapping
+    public ResponseEntity<?> submit(@RequestBody ChoiceRequest req) {
+        // like / dislike ID 분리
+        List<String> likeIds = new ArrayList<>();
+        List<String> dislikeIds = new ArrayList<>();
+        if (req.selected != null) {
+            for (ChoiceItem it : req.selected) {
+                if (it == null || it.id == null) continue;
+                if (it.like) likeIds.add(it.id);
+                else dislikeIds.add(it.id);
+            }
         }
-        // 완료된 경우: 최종 결과 반환
+
+        MbtiResultDto result = choiceService.processChoicesFromIdsOrNull(
+                req.jobId, likeIds, dislikeIds
+        );
+        if (result == null) {
+            return ResponseEntity.status(409).body("Job is not DONE yet");
+        }
         return ResponseEntity.ok(result);
+    }
+
+    // --- 요청 DTO (간단 내장형; 별도 파일로 분리해도 됩니다) ---
+
+    public static class ChoiceRequest {
+        public String jobId;
+        public List<ChoiceItem> selected;
+    }
+
+    public static class ChoiceItem {
+        public String id;
+        public boolean like;
     }
 }

@@ -1,6 +1,8 @@
+// src/main/java/com/seeds/NergetBackend/service/ChoiceService.java
 package com.seeds.NergetBackend.service;
 
 import com.seeds.NergetBackend.dto.MbtiResultDto;
+import com.seeds.NergetBackend.repository.ImageVectorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,85 +12,82 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChoiceService {
 
-    private final JobService jobService;            // 초기 4장 job 상태/결과 확인
-    private final EmbeddingService embeddingService; // (URI 기반 선택 시 사용)
-    private final VectorStore vectorStore;           // (ID 기반 선택 시 사용)
+    private final JobService jobService;              // 초기 4장 job 상태/결과 확인
+    private final VectorStore vectorStore;            // 후보 벡터 조회
+    private final ImageVectorRepository imageRepo;    // 저장된 벡터 직접 조회 가능
 
     /**
-     * 프론트가 이미지 URI를 보냈을 때 쓰는 버전
+     * 사용자가 12개 후보 중 선택(좋아요/싫어요)했을 때 결과 계산
      */
-    public MbtiResultDto processChoicesOrNull(String jobId, List<String> choiceImageUris) {
-        var status = jobService.getStatus(jobId);
-        if (!"DONE".equals(status.getStatus())) return null;
+    public MbtiResultDto processChoicesFromIdsOrNull(String jobId, List<String> likeIds, List<String> dislikeIds) {
+        com.seeds.NergetBackend.entity.Job job = jobService.getJob(jobId);
+        if (job.getStatus() != com.seeds.NergetBackend.entity.Job.Status.DONE) return null;
 
-        float[] initialVec = status.getResultVector();
+        float[] vInit = job.toArray(); // 초기 벡터
+        float[] meanLike = average(vectorStore.getVectorsByIds(likeIds));
+        float[] meanHate = average(vectorStore.getVectorsByIds(dislikeIds));
+        float[] vSwipe = subtract(meanLike, meanHate);
 
-        // URI → 임베딩 → 평균
-        List<float[]> choiceVecs = embeddingService.embedAll(choiceImageUris);
-        float[] choiceAgg = average(choiceVecs);
+        float alpha = 0.6f;
+        float[] vFinal3 = combineWeighted(vInit, vSwipe, alpha);
 
-        float[] finalVec = combineAverage(initialVec, choiceAgg);
-
-        String mbti = mockMbti(finalVec);
-        String explanation = "시각적 선호 패턴 기반 예비 결과 (URI 기반 모킹)";
-        return new MbtiResultDto(mbti, explanation, finalVec);
+        float v4 = polarization(vFinal3);
+        float[] vFinal = new float[]{vFinal3[0], vFinal3[1], vFinal3[2], v4};
+        String mbti = toMbti(vFinal);
+        return new MbtiResultDto(mbti, "초기 + 스와이프 결합 결과", vFinal);
     }
 
-    /**
-     * 서버가 제공한 후보 ID들을 프론트가 제출했을 때 쓰는 버전(AWS 벡터)
-     */
-    public MbtiResultDto processChoicesFromIdsOrNull(String jobId, List<String> selectedIds) {
-        var st = jobService.getStatus(jobId);
-        if (!"DONE".equals(st.getStatus())) return null;
-
-        float[] initialVec = st.getResultVector();
-
-        // ID → 벡터 조회 → 평균
-        List<float[]> selectedVecs = vectorStore.getVectorsByIds(selectedIds);
-        float[] choiceAvg = average(selectedVecs);
-
-        float[] finalVec = combineAverage(initialVec, choiceAvg);
-
-        String mbti = mockMbti(finalVec);
-        String exp  = "초기 선호 + 선택 선호 결합 결과(벡터ID 기반)";
-        return new MbtiResultDto(mbti, exp, finalVec);
-    }
-
-    // ---- 아래는 유틸 메서드들 (없어서 에러 나던 부분) ----
-
-    /** 여러 벡터의 평균 */
+    /** 여러 벡터 평균 */
     private float[] average(List<float[]> vecs) {
-        if (vecs == null || vecs.isEmpty()) return new float[0];
-        int dim = vecs.get(0).length;
+        int dim = 4;
         float[] avg = new float[dim];
+        if (vecs == null || vecs.isEmpty()) return avg;
         for (float[] v : vecs) {
-            for (int i = 0; i < dim; i++) avg[i] += v[i];
+            for (int i = 0; i < dim; i++) {
+                float val = (v != null && v.length > i) ? v[i] : 0f;
+                avg[i] += val;
+            }
         }
         for (int i = 0; i < dim; i++) avg[i] /= vecs.size();
         return avg;
     }
 
-    /** 두 벡터의 단순 평균 */
-    private float[] combineAverage(float[] a, float[] b) {
-        int n = Math.max(a.length, b.length);
-        float[] out = new float[n];
-        for (int i = 0; i < n; i++) {
-            float av = i < a.length ? a[i] : 0f;
-            float bv = i < b.length ? b[i] : 0f;
-            out[i] = (av + bv) / 2f;
+    /** 두 벡터의 가중 평균 */
+    private float[] combineWeighted(float[] a, float[] b, float alpha) {
+        int dim = 4;
+        float[] out = new float[dim];
+        for (int i = 0; i < dim; i++) {
+            float av = (a != null && a.length > i) ? a[i] : 0f;
+            float bv = (b != null && b.length > i) ? b[i] : 0f;
+            out[i] = alpha * av + (1 - alpha) * bv;
         }
         return out;
     }
 
-    /** 간단한 MBTI 모킹 (앞 4차원 부호로 판정) */
-    private String mockMbti(float[] v) {
-        float e = v.length > 0 ? v[0] : 0;
-        float s = v.length > 1 ? v[1] : 0;
-        float t = v.length > 2 ? v[2] : 0;
-        float j = v.length > 3 ? v[3] : 0;
-        return (e >= 0 ? "E" : "I") +
-                (s >= 0 ? "S" : "N") +
-                (t >= 0 ? "T" : "F") +
-                (j >= 0 ? "J" : "P");
+    /** 벡터 차감 (좋아요 - 싫어요) */
+    private float[] subtract(float[] a, float[] b) {
+        int dim = 4;
+        float[] out = new float[dim];
+        for (int i = 0; i < dim; i++) {
+            float av = (a != null && a.length > i) ? a[i] : 0f;
+            float bv = (b != null && b.length > i) ? b[i] : 0f;
+            out[i] = av - bv;
+        }
+        return out;
+    }
+
+    /** 4축: 1,2,3의 양극화 정도 */
+    private float polarization(float[] v) {
+        float pol = (Math.abs(v[0]) + Math.abs(v[1]) + Math.abs(v[2])) / 3f;
+        return 2f * pol - 1f; // [-1,1]
+    }
+
+    /** MBTI 라벨링 */
+    private String toMbti(float[] v) {
+        String axis1 = (v[0] >= 0 ? "S" : "B");
+        String axis2 = (v[1] >= 0 ? "F" : "C");
+        String axis3 = (v[2] >= 0 ? "G" : "P");
+        String axis4 = (v[3] >= 0 ? "E" : "N");
+        return axis1 + axis2 + axis3 + axis4;
     }
 }

@@ -9,7 +9,7 @@ import java.util.Random;
 @Service
 public class EmbeddingService {
 
-    private static final int DIM = 8; // 실제는 512/768 등
+    private static final int DIM = 4; // 실제는 512/768 등
 
     /** 단일 이미지 URI를 벡터로 변환 (모킹) */
     public float[] embed(String uri) {
@@ -30,12 +30,16 @@ public class EmbeddingService {
 
     /** 간단한 평균 집계 */
     public float[] aggregate(List<float[]> vectors) {
-        float[] sum = new float[DIM];
-        if (vectors.isEmpty()) return sum;
-        for (float[] v : vectors) {
-            for (int i = 0; i < DIM; i++) sum[i] += v[i];
-        }
-        for (int i = 0; i < DIM; i++) sum[i] /= vectors.size();
-        return sum;
+        int dim = 4; // 4차원 고정
+        float[] sum = new float[dim];
+        if (vectors == null || vectors.isEmpty()) return sum;
+            for (float[] v : vectors) {
+                for (int i = 0; i < dim; i++) {
+                    float val = (v != null && v.length > i) ? v[i] : 0f;
+                    sum[i] += val;
+                }
+            }
+            for (int i = 0; i < dim; i++) sum[i] /= vectors.size();
+            return sum;
     }
 }
