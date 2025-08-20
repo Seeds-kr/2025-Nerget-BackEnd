@@ -2,6 +2,7 @@ package com.seeds.NergetBackend.controller;
 
 import com.seeds.NergetBackend.dto.PostRequestDto;
 import com.seeds.NergetBackend.dto.PostResponseDto;
+import com.seeds.NergetBackend.dto.PostUpdateRequestDto;
 import com.seeds.NergetBackend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

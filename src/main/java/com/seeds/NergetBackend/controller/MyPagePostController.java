@@ -1,8 +1,8 @@
-// src/main/java/com/seeds/NergetBackend/controller/MyPagePostController.java
+
 package com.seeds.NergetBackend.controller;
 
 import com.seeds.NergetBackend.dto.PostUpdateRequestDto;
-import com.seeds.NergetBackend.service.MyPostService;
+import com.seeds.NergetBackend.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,20 +15,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/mypage/posts")
 public class MyPagePostController {
 
-    private final MyPostService myPostService;
+    private final PostService PostService;
 
     @PatchMapping("/{postId}")
     public ResponseEntity<?> updateMyPost(@PathVariable Long postId,
                                           @Valid @RequestBody PostUpdateRequestDto req,
                                           @AuthenticationPrincipal UserDetails user) {
-        myPostService.updateMyPost(postId, user.getUsername(), req); // username = email 가정
+        PostService.updateMyPost(postId, user.getUsername(), req); // username = email 가정
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<?> deleteMyPost(@PathVariable Long postId,
                                           @AuthenticationPrincipal UserDetails user) {
-        myPostService.deleteMyPost(postId, user.getUsername());
+        PostService.deleteMyPost(postId, user.getUsername());
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,4 +1,4 @@
-// src/main/java/com/seeds/NergetBackend/service/MyPageService.java
+
 package com.seeds.NergetBackend.service;
 
 import com.seeds.NergetBackend.dto.*;

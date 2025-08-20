@@ -18,7 +18,7 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    // ✅ 댓글 생성
+    // 댓글 생성
     @PostMapping("/{postId}")
     public ResponseEntity<Void> createComment(
             @PathVariable Long postId,
@@ -29,7 +29,7 @@ public class CommentController {
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 게시글의 댓글 전체 조회
+    // 게시글의 댓글 전체 조회
     @GetMapping("/{postId}")
     public ResponseEntity<List<CommentResponseDto>> getComments(
             @PathVariable Long postId) {
@@ -38,18 +38,18 @@ public class CommentController {
         return ResponseEntity.ok(comments);
     }
 
-    // ✅ 댓글 수정
+    // 댓글 수정
     @PutMapping("/{commentId}")
     public ResponseEntity<Void> updateComment(
             @PathVariable Long commentId,
             @RequestBody CommentRequestDto requestDto,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @com.seeds.NergetBackend.controller.AuthenticationPrincipal UserDetails userDetails) {
 
         commentService.updateComment(commentId, requestDto, userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 댓글 삭제
+    // 댓글 삭제
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long commentId,

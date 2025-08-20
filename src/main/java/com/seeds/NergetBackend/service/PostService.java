@@ -33,7 +33,7 @@ public class PostService {
         post.setContent(dto.getContent());
         post.setAuthor(author);
 
-        // TODO: 이미지 업로드 후 URL 저장
+        // 이미지 업로드 후 URL 저장
         post.setImageUrl("이미지 URL 로직");
 
         post.setViewCount(0);
