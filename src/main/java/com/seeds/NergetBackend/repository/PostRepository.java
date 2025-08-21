@@ -2,6 +2,7 @@ package com.seeds.NergetBackend.repository;
 
 import com.seeds.NergetBackend.entity.Post;
 import com.seeds.NergetBackend.entity.Member;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
 
@@ -24,4 +25,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     //  수정/삭제 시 소유자 검증
     Optional<Post> findByIdAndAuthorEmail(Long postId, String email);
+
+    Object findMyPosts(String email, Long cursor, PageRequest of);
 }
