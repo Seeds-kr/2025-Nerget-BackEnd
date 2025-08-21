@@ -17,7 +17,7 @@ public class MyPageController {
     private final MyPageService myPageService;
 
     @GetMapping("/posts")
-    public ResponseEntity<PageResponse<PostSummaryDto>> myPosts(
+    public ResponseEntity<PageResponseDto<PostSummaryDto>> myPosts(
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int limit,
             @AuthenticationPrincipal UserDetails user) {
@@ -28,7 +28,7 @@ public class MyPageController {
     }
 
     @GetMapping("/comments")
-    public ResponseEntity<PageResponse<CommentSummaryDto>> myComments(
+    public ResponseEntity<PageResponseDto<CommentSummaryDto>> myComments(
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int limit,
             @AuthenticationPrincipal UserDetails user) {
@@ -39,7 +39,7 @@ public class MyPageController {
     }
 
     @GetMapping("/likes")
-    public ResponseEntity<PageResponse<LikedPostSummaryDto>> myLikes(
+    public ResponseEntity<PageResponseDto<LikedPostSummaryDto>> myLikes(
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int limit,
             @AuthenticationPrincipal UserDetails user) {

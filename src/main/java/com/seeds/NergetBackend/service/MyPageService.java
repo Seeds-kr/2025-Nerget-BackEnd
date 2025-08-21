@@ -21,7 +21,7 @@ public class MyPageService {
     private final CommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
 
-    public PageResponse<PostSummaryDto> myPosts(String email, Long cursor, int limit) {
+    public PageResponseDto<PostSummaryDto> myPosts(String email, Long cursor, int limit) {
         List<Post> postList = postRepository.findMyPosts(email, cursor, PageRequest.of(0, limit));
         Long next = postList.size() == limit ? postList.get(postList.size() - 1).getId() : null;
 
@@ -36,10 +36,10 @@ public class MyPageService {
                         .build()
         ).toList();
 
-        return new PageResponse<>(items, next);
+        return new PageResponseDto<>(items, next);
     }
 
-    public PageResponse<CommentSummaryDto> myComments(String email, Long cursor, int limit) {
+    public PageResponseDto<CommentSummaryDto> myComments(String email, Long cursor, int limit) {
         List<Comment> commentList = commentRepository.findMyComments(email, cursor, PageRequest.of(0, limit));
         Long next = commentList.size() == limit ? commentList.get(commentList.size() - 1).getId() : null;
 
@@ -53,10 +53,10 @@ public class MyPageService {
                         .build()
         ).toList();
 
-        return new PageResponse<>(items, next);
+        return new PageResponseDto<>(items, next);
     }
 
-    public PageResponse<LikedPostSummaryDto> myLikes(String email, Long cursor, int limit) {
+    public PageResponseDto<LikedPostSummaryDto> myLikes(String email, Long cursor, int limit) {
         List<PostLike> likeList = postLikeRepository.findMyLikes(email, cursor, PageRequest.of(0, limit));
         Long next = likeList.size() == limit ? likeList.get(likeList.size() - 1).getId() : null;
 
@@ -73,6 +73,6 @@ public class MyPageService {
                     .build();
         }).toList();
 
-        return new PageResponse<>(items, next);
+        return new PageResponseDto<>(items, next);
     }
 }
