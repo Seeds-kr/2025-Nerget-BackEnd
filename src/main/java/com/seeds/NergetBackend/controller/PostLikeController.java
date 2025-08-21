@@ -1,4 +1,4 @@
-// src/main/java/com/seeds/NergetBackend/controller/PostLikeController.java
+
 package com.seeds.NergetBackend.controller;
 
 import com.seeds.NergetBackend.service.PostLikeService;

@@ -1,4 +1,4 @@
-// src/main/java/com/seeds/NergetBackend/service/PostLikeService.java
+
 package com.seeds.NergetBackend.service;
 
 import com.seeds.NergetBackend.entity.Member;
@@ -34,13 +34,13 @@ public class PostLikeService {
         Member member = getMemberByEmail(email);
         Post post = getPost(postId);
 
-        boolean exists = postLikeRepository.existsByPostIdAndMemberMemberId(postId, member.getMemberId());
+        boolean exists = postLikeRepository.existsByPostIdAndMemberId(postId, member.getId());
         boolean liked;
 
         if (exists) {
             // 취소
             PostLike like = (PostLike) postLikeRepository
-                    .findByPostIdAndMemberMemberId(postId, member.getMemberId())
+                    .findByPostIdAndMemberId(postId, member.getId())
                     .orElseThrow(); // 존재한다고 확인했으므로 안전
             postLikeRepository.delete(like);
             liked = false;

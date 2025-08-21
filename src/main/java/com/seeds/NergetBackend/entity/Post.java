@@ -9,6 +9,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "posts")
@@ -29,7 +31,7 @@ public class Post {
     private String content;
 
     @Column
-    private String imageUrl; // 이미지 파일의 저장 경로 (S3 또는 로컬 URL)
+    private String imageUrl;
 
     @CreatedDate
     @Column(updatable = false)
@@ -53,5 +55,4 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
-
 }

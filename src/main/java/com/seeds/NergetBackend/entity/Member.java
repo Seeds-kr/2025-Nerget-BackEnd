@@ -9,29 +9,31 @@ import java.util.List;
 
 @Entity
 @Table(name = "members")
-@Data
+@Getter
+@Setter
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer memberId;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column
-    private String password; // 소셜 로그인이라면 null 가능
+    private String password;
 
     @Column(length = 50)
     private String nickname;
 
-    @Column
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
+
 
 }
