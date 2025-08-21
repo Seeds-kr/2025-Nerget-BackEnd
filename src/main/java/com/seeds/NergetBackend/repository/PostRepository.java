@@ -6,6 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
 
+import org.springframework.data.jpa.repository.Query; // 추가
+import org.springframework.data.repository.query.Param; // 추가
 import java.util.List;
 import java.util.Optional;
 
@@ -26,5 +28,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     //  수정/삭제 시 소유자 검증
     Optional<Post> findByIdAndAuthorEmail(Long postId, String email);
 
-    Object findMyPosts(String email, Long cursor, PageRequest of);
+    @Query("SELECT p FROM Post p WHERE p.author.email = :email AND (:cursor IS NULL OR p.id < :cursor) ORDER BY p.id DESC")
+    List<Post> findMyPosts(@Param("email") String email, @Param("cursor") Long cursor, Pageable pageable);
 }
