@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class GoogleLoginDto {
-    private String idToken;
+public class CommentRequestDto {
+    private String content;
 }
