@@ -39,7 +39,7 @@ public class PostLikeService {
 
         if (exists) {
             // 취소
-            PostLike like = postLikeRepository
+            PostLike like = (PostLike) postLikeRepository
                     .findByPostIdAndMemberMemberId(postId, member.getMemberId())
                     .orElseThrow(); // 존재한다고 확인했으므로 안전
             postLikeRepository.delete(like);

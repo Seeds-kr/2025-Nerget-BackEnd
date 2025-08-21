@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query; // 추가
 import org.springframework.data.repository.query.Param; // 추가
 import java.util.List;
+import java.util.Optional;
 
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
@@ -19,4 +20,6 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     long countByPostId(Long postId);
     @Query("SELECT pl FROM PostLike pl WHERE pl.member.email = :email AND (:cursor IS NULL OR pl.id < :cursor) ORDER BY pl.id DESC")
     List<PostLike> findMyLikes(@Param("email") String email, @Param("cursor") Long cursor, Pageable pageable);
+
+    Optional<Object> findByPostIdAndMemberMemberId(Long postId, Integer memberId);
 }

@@ -19,7 +19,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 제목 검색
     List<Post> findByTitleContaining(String keyword);
 
-    // 내 글 목록 (페이징, 최신순)
+    // 내 글 목록
     List<Post> findByAuthorEmailOrderByIdDesc(String email, Pageable pageable);
 
     // 커서 기반 페이징 (이전 글 불러오기)
