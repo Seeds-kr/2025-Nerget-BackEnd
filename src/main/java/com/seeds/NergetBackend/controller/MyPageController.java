@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/mypage")
-public class MyPag eController {
+public class MyPageController {
 
     private final MyPageService myPageService;
 
