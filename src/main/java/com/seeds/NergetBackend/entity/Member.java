@@ -35,5 +35,11 @@ public class Member {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
+    private String bio;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+
 
 }

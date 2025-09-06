@@ -1,7 +1,8 @@
 package com.seeds.NergetBackend.service;
 
-import com.seeds.NergetBackend.dto.profile.ProfileResponseDto;
-import com.seeds.NergetBackend.dto.profile.ProfileUpdateRequestDto;
+
+import com.seeds.NergetBackend.dto.ProfileResponseDto;
+import com.seeds.NergetBackend.dto.ProfileUpdateRequestDto;
 import com.seeds.NergetBackend.entity.Member;
 import com.seeds.NergetBackend.exception.DuplicateNicknameException;
 import com.seeds.NergetBackend.repository.MemberRepository;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
+
 
     private final MemberRepository memberRepository;
 
