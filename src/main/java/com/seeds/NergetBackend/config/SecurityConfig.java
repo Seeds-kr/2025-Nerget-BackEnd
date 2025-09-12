@@ -11,29 +11,31 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String[] SWAGGER_WHITELIST = {
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-ui.html"
+    };
+
+    private static final String[] PUBLIC_APIS = {
+            "/error", "/actuator/**", "/h2-console/**",
+            "/api/auth/**"     // 로그인/토큰 발급 등 공개 API 있으면 여기에
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF: REST API 테스트 편의상 비활성화
                 .csrf(csrf -> csrf.disable())
-
-                // CORS 기본값
                 .cors(Customizer.withDefaults())
-
-                // 인가 규칙: 전부 허용 (개발/테스트용)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/error", "/actuator/**", "/h2-console/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers(SWAGGER_WHITELIST).permitAll() // Swagger 항상 허용
+                        .requestMatchers(PUBLIC_APIS).permitAll()       // 공개 API
+                        .requestMatchers("/api/mypage/**").authenticated() // 마이페이지는 인증 필요
+                        .anyRequest().permitAll() // 나머지는 상황에 따라 authenticated로 변경
                 )
-
-                // 폼 로그인/세션 로그인 사용 안 함 (원하면 지워도 됨)
                 .formLogin(form -> form.disable())
-                .httpBasic(Customizer.withDefaults())
-
-                // H2 콘솔 사용 시 frame 옵션
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-        ;
-
+                .httpBasic(httpBasic -> httpBasic.disable()) // JWT 쓰면 비활성 권장
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())); // H2 콘솔용
         return http.build();
     }
 }
