@@ -13,9 +13,11 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
-        // 네 프론트 주소 허용
+        // 프론트엔드 주소 허용
         c.setAllowedOrigins(List.of(
+                "http://localhost:3000",
                 "http://localhost:3030",
+                "http://192.168.0.6:3000",
                 "http://192.168.0.6:3030"
         ));
         c.setAllowCredentials(true);

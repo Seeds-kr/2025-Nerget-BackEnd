@@ -1,19 +1,26 @@
 // src/main/java/com/seeds/NergetBackend/service/ImageVectorService.java
 package com.seeds.NergetBackend.service;
 
+import com.seeds.NergetBackend.dto.RecommendationItemDto;
 import com.seeds.NergetBackend.entity.ImageVector;
 import com.seeds.NergetBackend.repository.ImageVectorRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ImageVectorService {
 
     private final ImageVectorRepository repo;
+    
+    // S3 퍼블릭 베이스 URL (ChoiceService와 동일한 설정)
+    @Value("${app.s3.public-base-url:}")
+    private String s3PublicBaseUrl;
 
     /** 업로드 직후: PENDING 레코드 생성 (AI 처리 대기) */
     @Transactional
@@ -74,6 +81,59 @@ public class ImageVectorService {
         List<ImageVector> done = repo.findByStatus(ImageVector.Status.DONE);
         java.util.Collections.shuffle(done);
         return done.stream().limit(count).toList();
+    }
+
+    /** MBTI 코드로 이미지 검색 */
+    @Transactional(readOnly = true)
+    public List<RecommendationItemDto> findByMbtiCode(String code, int limit) {
+        // DONE 상태인 모든 이미지 가져오기
+        List<ImageVector> doneImages = repo.findByStatus(ImageVector.Status.DONE);
+        
+        // MBTI 코드와 일치하는 이미지 필터링
+        List<ImageVector> matchingImages = doneImages.stream()
+                .filter(image -> {
+                    String imageMbti = calculateMbtiFromVector(image);
+                    return code.equals(imageMbti);
+                })
+                .limit(limit)
+                .collect(Collectors.toList());
+        
+        // RecommendationItemDto로 변환
+        return matchingImages.stream()
+                .map(image -> RecommendationItemDto.builder()
+                        .imageId(image.getId())
+                        .imageUrl(toPublicUrl(image.getS3Key()))
+                        .score(0f) // 요구사항에 따라 score=0
+                        .build())
+                .collect(Collectors.toList());
+    }
+    
+    /** ChoiceService.toMbti와 동일한 로직으로 MBTI 코드 계산 */
+    private String calculateMbtiFromVector(ImageVector image) {
+        if (image == null) return null;
+        
+        float v1 = image.getV1();
+        float v2 = image.getV2();
+        float v3 = image.getV3();
+        float v4 = image.getV4();
+        
+        String axis1 = (v1 >= 0 ? "S" : "B");
+        String axis2 = (v2 >= 0 ? "F" : "C");
+        String axis3 = (v3 >= 0 ? "G" : "P");
+        String axis4 = (v4 >= 0 ? "E" : "N");
+        
+        return axis1 + axis2 + axis3 + axis4;
+    }
+    
+    /** 퍼블릭 베이스 URL + s3Key로 최종 URL 조립 (ChoiceService와 동일한 로직) */
+    private String toPublicUrl(String s3Key) {
+        if (s3Key == null) return null;
+        String base = (s3PublicBaseUrl == null) ? "" : s3PublicBaseUrl.trim();
+        if (base.isEmpty()) return s3Key; // 임시: 프론트에서 처리하게
+        // base 끝/키 앞의 슬래시 중복 방지
+        if (base.endsWith("/")) base = base.substring(0, base.length()-1);
+        String key = s3Key.startsWith("/") ? s3Key.substring(1) : s3Key;
+        return base + "/" + key;
     }
 
     // --- 내부 유틸 ---
