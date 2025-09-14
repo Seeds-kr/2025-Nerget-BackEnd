@@ -3,41 +3,40 @@ package com.seeds.NergetBackend.oauth;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory; // ✅ 이거 누락되면 오류
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
-import org.springframework.beans.factory.annotation.Value; // ✅ @Value 어노테이션용 import
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.seeds.NergetBackend.oauth.GoogleUser;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
 
 @Service
 public class GoogleOAuthService {
 
-    @Value("${google.client-id}")
-    private String clientId;
+    private static final String CLIENT_ID = "프론트에서 발급받은 CLIENT_ID";
 
     public GoogleUser verifyIdToken(String idToken) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier
-                    .Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance())
-                    .setAudience(Collections.singletonList(clientId))
+                    .Builder(new NetHttpTransport(), new JacksonFactory())
+                    .setAudience(Collections.singletonList(CLIENT_ID))
                     .build();
 
-            GoogleIdToken token = verifier.verify(idToken);
+            GoogleIdToken googleIdToken = verifier.verify(idToken);
+            if (googleIdToken != null) {
+                GoogleIdToken.Payload payload = googleIdToken.getPayload();
 
-            if (token != null) {
-                Payload payload = token.getPayload();
                 return new GoogleUser(
-                        payload.getSubject(),
                         payload.getEmail(),
-                        (String) payload.get("name")
+                        (String) payload.get("name"),
+                        (String) payload.get("picture")
                 );
             } else {
-                throw new RuntimeException("Invalid ID token");
+                throw new RuntimeException("Invalid ID token.");
             }
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to verify token", e);
+        } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException("Google ID Token verification failed", e);
         }
     }
 }

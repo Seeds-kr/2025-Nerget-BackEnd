@@ -71,4 +71,14 @@ public class JobService {
         }
         return job.toArray();
     }
+
+    @Transactional
+    public Job createEmptyJob(String userId) {
+        Job job = Job.builder()
+                .userId(userId)
+                .status(Job.Status.DONE)  // 바로 완료 처리
+                .progress(100)
+                .build();
+        return jobRepository.save(job);
+    }
 }

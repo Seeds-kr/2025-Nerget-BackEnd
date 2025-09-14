@@ -28,16 +28,23 @@ public class FlowController {
      */
     @PostMapping("/start")
     public ResponseEntity<JobStartResp> start(@RequestBody StartReq req) {
-        // 1) 이미지들을 PENDING 등록
-        List<ImageVector> pendings =
-                imageVectorService.registerPendingBatch(req.userId, req.s3Keys, req.metaJson);
+        Job job;
 
-        // 2) Job 생성 (벡터 계산은 비동기 워커가 수행)
-        Job job = jobService.createJob(req.userId, req.s3Keys);
+        if (req.s3Keys == null || req.s3Keys.isEmpty()) {
+            // 사진 업로드 안 한 경우 → 바로 DONE Job 생성
+            job = jobService.createEmptyJob(req.userId);
+        } else {
+            // 1) 이미지들을 PENDING 등록
+            List<ImageVector> pendings =
+                    imageVectorService.registerPendingBatch(req.userId, req.s3Keys, req.metaJson);
+
+            // 2) Job 생성
+            job = jobService.createJob(req.userId, req.s3Keys);
+        }
 
         JobStartResp resp = new JobStartResp();
         resp.jobId = job.getId();
-        resp.countRegistered = pendings.size();
+        resp.countRegistered = (req.s3Keys == null) ? 0 : req.s3Keys.size();
         return ResponseEntity.ok(resp);
     }
 
