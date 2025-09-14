@@ -19,7 +19,7 @@ WORKDIR /app/NergetBackend
 RUN ./gradlew clean build -x test
 
 # Runtime stage
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre
 
 # Set working directory
 WORKDIR /app
