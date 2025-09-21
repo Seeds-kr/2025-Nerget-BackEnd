@@ -19,8 +19,23 @@ public class JobService {
     /** 새 Job 생성 (업로드 완료 시 호출) */
     @Transactional
     public Job createJob(String userId, List<String> uris) {
+        return createJob(userId, uris, Job.Type.ONBOARDING);
+    }
+
+    /** 새 Job 생성 (타입 지정) */
+    @Transactional
+    public Job createJob(String userId, List<String> uris, Job.Type type) {
+        // 사용자당 동일 타입 Job은 1개만 허용
+        if (type == Job.Type.ONBOARDING) {
+            jobRepository.findByUserIdAndType(userId, type)
+                    .ifPresent(existingJob -> {
+                        throw new IllegalStateException("User already has an ONBOARDING job");
+                    });
+        }
+
         Job job = Job.builder()
                 .userId(userId)
+                .type(type)
                 .status(Job.Status.PENDING)
                 .progress(0)
                 .build();
@@ -74,8 +89,22 @@ public class JobService {
 
     @Transactional
     public Job createEmptyJob(String userId) {
+        return createEmptyJob(userId, Job.Type.ONBOARDING);
+    }
+
+    @Transactional
+    public Job createEmptyJob(String userId, Job.Type type) {
+        // 사용자당 동일 타입 Job은 1개만 허용
+        if (type == Job.Type.ONBOARDING) {
+            jobRepository.findByUserIdAndType(userId, type)
+                    .ifPresent(existingJob -> {
+                        throw new IllegalStateException("User already has an ONBOARDING job");
+                    });
+        }
+
         Job job = Job.builder()
                 .userId(userId)
+                .type(type)
                 .status(Job.Status.DONE)  // 바로 완료 처리
                 .progress(100)
                 .build();

@@ -12,7 +12,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "jobs")
+@Table(
+    name = "jobs",
+    indexes = {
+        @Index(name = "uk_jobs_user_type", columnList = "userId, type", unique = true)
+    }
+)
 public class Job {
 
     @Id
@@ -21,6 +26,11 @@ public class Job {
 
     @Column(length = 64)
     private String userId;
+
+    /** Job 타입 (ONBOARDING, RECALCULATION 등) */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private Type type;
 
     /** Job 상태 */
     @Enumerated(EnumType.STRING)
@@ -47,6 +57,11 @@ public class Job {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    public enum Type {
+        ONBOARDING,     // 최초 로그인 시 3장 이미지 처리
+        RECALCULATION   // 향후 확장: 재계산, 재처리 등
+    }
+
     public enum Status {
         PENDING, RUNNING, DONE, FAILED
     }
@@ -69,6 +84,7 @@ public class Job {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
         if (this.status == null) this.status = Status.PENDING;
+        if (this.type == null) this.type = Type.ONBOARDING;
     }
 
     @PreUpdate

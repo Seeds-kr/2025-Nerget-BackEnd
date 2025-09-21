@@ -17,7 +17,8 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_image_vectors_user", columnList = "userId"),
                 @Index(name = "idx_image_vectors_status", columnList = "status"),
-                @Index(name = "idx_image_vectors_created_at", columnList = "createdAt")
+                @Index(name = "idx_image_vectors_created_at", columnList = "createdAt"),
+                @Index(name = "idx_image_vectors_job", columnList = "jobId")
         }
 )
 public class ImageVector {
@@ -29,6 +30,10 @@ public class ImageVector {
     /** 업로더/소유자 식별자(선택) */
     @Column(length = 64)
     private String userId;
+
+    /** 연결된 Job ID (FK) */
+    @Column(length = 36)
+    private String jobId;
 
     /** 원본 이미지 식별 (S3 key 또는 URL) */
     @Column(nullable = false, length = 512)

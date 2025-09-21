@@ -25,8 +25,15 @@ public class ImageVectorService {
     /** 업로드 직후: PENDING 레코드 생성 (AI 처리 대기) */
     @Transactional
     public ImageVector registerPending(String userId, String s3Key, String metaJson) {
+        return registerPending(userId, s3Key, metaJson, null);
+    }
+
+    /** 업로드 직후: PENDING 레코드 생성 (Job 연결) */
+    @Transactional
+    public ImageVector registerPending(String userId, String s3Key, String metaJson, String jobId) {
         ImageVector iv = ImageVector.builder()
                 .userId(userId)
+                .jobId(jobId)
                 .s3Key(s3Key)
                 .metaJson(metaJson)
                 .status(ImageVector.Status.PENDING)
@@ -38,8 +45,14 @@ public class ImageVectorService {
     /** 여러 장 한 번에 PENDING 등록 */
     @Transactional
     public List<ImageVector> registerPendingBatch(String userId, List<String> s3Keys, String metaJson) {
+        return registerPendingBatch(userId, s3Keys, metaJson, null);
+    }
+
+    /** 여러 장 한 번에 PENDING 등록 (Job 연결) */
+    @Transactional
+    public List<ImageVector> registerPendingBatch(String userId, List<String> s3Keys, String metaJson, String jobId) {
         return s3Keys.stream()
-                .map(k -> registerPending(userId, k, metaJson))
+                .map(k -> registerPending(userId, k, metaJson, jobId))
                 .toList();
     }
 

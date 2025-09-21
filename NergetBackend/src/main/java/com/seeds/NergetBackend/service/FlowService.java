@@ -13,6 +13,7 @@ public class FlowService {
 
     private final StorageService storageService;
     private final JobService jobService;
+    private final ImageVectorService imageVectorService;
     private final AiWorkerService aiWorkerService; // ⬅️ EmbeddingService 대신 워커 주입
 
     /** 플로우 식별자 발급 (로그인 직후) */
@@ -35,7 +36,10 @@ public class FlowService {
         // 2) Job 생성 (DB에 PENDING으로 기록)
         var job = jobService.createJob(flowId, uris);
 
-        // 3) 비동기 워커에 실제 임베딩 작업 위임 (즉시 리턴)
+        // 3) ImageVector들을 Job과 연결하여 등록
+        imageVectorService.registerPendingBatch(flowId, uris, null, job.getId());
+
+        // 4) 비동기 워커에 실제 임베딩 작업 위임 (즉시 리턴)
         aiWorkerService.processJob(job.getId(), uris);
 
         return job.getId();

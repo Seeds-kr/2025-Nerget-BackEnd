@@ -21,6 +21,9 @@ public interface ImageVectorRepository extends JpaRepository<ImageVector, String
     /** 여러 ID 한꺼번에 조회 */
     List<ImageVector> findByIdIn(List<String> ids);
 
+    /** 특정 Job에 연결된 ImageVector 조회 */
+    List<ImageVector> findByJobId(String jobId);
+
     @Query(value = """
         SELECT *
         FROM image_vectors
