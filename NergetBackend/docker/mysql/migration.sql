@@ -27,3 +27,4 @@ CREATE INDEX idx_image_vectors_job ON image_vectors(jobId);
 SELECT 'Migration completed successfully' as status;
 
 
+

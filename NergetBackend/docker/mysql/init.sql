@@ -8,3 +8,5 @@ USE nerget;
 
 -- 예시: 기본 관리자 계정이나 초기 데이터가 필요한 경우
 -- INSERT INTO member (email, nickname, created_at) VALUES ('admin@nerget.com', 'Admin', NOW());
+
+

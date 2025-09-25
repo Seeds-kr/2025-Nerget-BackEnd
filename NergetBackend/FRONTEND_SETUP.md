@@ -139,3 +139,5 @@ ports:
 2. **JWT 토큰 관리**: 테스트 로그인으로 토큰 발급 후 사용
 3. **로그 확인**: 문제 발생시 `docker-compose logs -f`로 디버깅
 4. **데이터 초기화**: `docker-compose down -v`로 완전 초기화
+
+
