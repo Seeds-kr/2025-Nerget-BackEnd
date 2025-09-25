@@ -1,0 +1,52 @@
+services:
+  # MySQL 데이터베이스
+  mysql:
+    image: mysql:8.0
+    container_name: nerget-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: nerget
+      MYSQL_USER: nerget
+      MYSQL_PASSWORD: nergetpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nerget-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Spring Boot 애플리케이션
+  app:
+    # 로컬에서 빌드하거나 Docker Hub에서 pull
+    build: .
+    # 또는: image: your-dockerhub-username/nerget-backend:latest
+    container_name: nerget-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/nerget?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: nerget
+      SPRING_DATASOURCE_PASSWORD: nergetpassword
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-1076507336995-uo4b83nsjjc24rcot71546lntebifp5k.apps.googleusercontent.com}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-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}
+      APP_S3_PUBLIC_BASE_URL: ${APP_S3_PUBLIC_BASE_URL:-https://my-bucket.s3.ap-northeast-2.amazonaws.com}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - nerget-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  nerget-network:
+    driver: bridge
+
+
