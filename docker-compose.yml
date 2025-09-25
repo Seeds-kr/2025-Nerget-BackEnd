@@ -1,0 +1,73 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: nerget-mysql
+    environment:
+      MYSQL_DATABASE: nerget
+      MYSQL_USER: nerget_user
+      MYSQL_PASSWORD: nerget_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - nerget-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-proot_password",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  api:
+    build: .
+    container_name: nerget-api
+    environment:
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/nerget?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: nerget_user
+      SPRING_DATASOURCE_PASSWORD: nerget_password
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+
+      # JPA configuration
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+
+      # Server configuration
+      SERVER_PORT: 8080
+      SERVER_ADDRESS: 0.0.0.0
+
+      # Google OAuth (keep existing values)
+      GOOGLE_CLIENT_ID: 1076507336995-uo4b83nsjjc24rcot71546lntebifp5k.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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
+
+      # S3 configuration
+      APP_S3_PUBLIC_BASE_URL: https://my-bucket.s3.ap-northeast-2.amazonaws.com
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - nerget-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  nerget-network:
+    driver: bridge

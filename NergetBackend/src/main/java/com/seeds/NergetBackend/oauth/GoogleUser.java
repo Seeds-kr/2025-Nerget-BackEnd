@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class GoogleUser {
-    private String sub;
     private String email;
     private String name;
+    private String picture; // 추가
 }

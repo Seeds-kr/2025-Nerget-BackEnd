@@ -2,6 +2,7 @@ package com.seeds.NergetBackend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +27,8 @@ public class Member {
     @Column(length = 50)
     private String nickname;
 
-    @Column
+
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 }

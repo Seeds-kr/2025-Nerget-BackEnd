@@ -1,12 +1,17 @@
+// src/main/java/com/seeds/NergetBackend/dto/AuthResponseDto.java
 package com.seeds.NergetBackend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @AllArgsConstructor
 public class AuthResponseDto {
-    private String token;
-    private String nickname;
-    private boolean isNew;
+
+    @JsonProperty("accessToken")   // 프론트가 우선적으로 읽는 키
+    private String accessToken;
+
+    @JsonProperty("isNewUser")     // 프론트가 인식하는 불린 키
+    private boolean isNewUser;
 }
