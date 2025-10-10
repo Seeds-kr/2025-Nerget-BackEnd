@@ -141,6 +141,12 @@ public class ImageVectorService {
     /** 퍼블릭 베이스 URL + s3Key로 최종 URL 조립 (ChoiceService와 동일한 로직) */
     private String toPublicUrl(String s3Key) {
         if (s3Key == null) return null;
+        
+        // 이미 완전한 URL이면 그대로 반환
+        if (s3Key.startsWith("http://") || s3Key.startsWith("https://")) {
+            return s3Key;
+        }
+        
         String base = (s3PublicBaseUrl == null) ? "" : s3PublicBaseUrl.trim();
         if (base.isEmpty()) return s3Key; // 임시: 프론트에서 처리하게
         // base 끝/키 앞의 슬래시 중복 방지

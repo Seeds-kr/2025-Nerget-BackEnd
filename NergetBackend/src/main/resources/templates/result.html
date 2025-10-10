@@ -100,7 +100,7 @@
       </div>
 
       <button class="btn btn-primary btn-home" onclick="goHome()">
-        처음으로
+        홈으로 가기
       </button>
     </div>
 
@@ -109,22 +109,22 @@
       const mbti = urlParams.get("mbti") || "SFGE";
 
       const keywords = {
-        SFGE: "미니멀 모던",
-        SFGN: "미니멀 내추럴",
-        SFPE: "캐주얼 스트리트",
-        SFPN: "캐주얼 베이직",
-        SCGE: "클래식 포멀",
-        SCGN: "클래식 트래디셔널",
-        SCPE: "포멀 콘템포러리",
-        SCPN: "포멀 베이식",
-        BFGE: "로맨틱 러블리",
-        BFGN: "로맨틱 내추럴",
-        BFPE: "보헤미안 믹스",
-        BFPN: "빈티지 캐주얼",
-        BCGE: "아방가르드",
-        BCGN: "모던 시크",
-        BCPE: "트렌디 하이브리드",
-        BCPN: "뉴트럴 클래식",
+        SFGE: "모던 시크",
+        SFGN: "세련된 모던",
+        SFPE: "엘레강스",
+        SFPN: "미니멀 클래식",
+        SCGE: "아방가르드",
+        SCGN: "화려한 캐주얼",
+        SCPE: "럭셔리 빈티지",
+        SCPN: "클래식 포멀",
+        BFGE: "미니멀 트렌디",
+        BFGN: "심플 모던",
+        BFPE: "절제된 클래식",
+        BFPN: "심플 베이직",
+        BCGE: "보헤미안",
+        BCGN: "캐주얼 모던",
+        BCPE: "빈티지 믹스",
+        BCPN: "편안한 베이직",
       };
 
       document.getElementById("mbtiCode").textContent = mbti;
@@ -138,7 +138,7 @@
       document.getElementById("v4Bar").textContent = "0.4 (Extreme)";
 
       function goHome() {
-        window.location.href = "/";
+        window.location.href = "/home";
       }
     </script>
   </body>

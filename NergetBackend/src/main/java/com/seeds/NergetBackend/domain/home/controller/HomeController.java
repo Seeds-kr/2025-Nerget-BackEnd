@@ -24,7 +24,7 @@ public class HomeController {
      * - 실제에선 인증에서 memberId를 꺼내 쓰면 되고,
      * - 테스트 중이면 쿼리스트링/헤더로 memberId 받는 것도 OK
      */
-    @GetMapping("/recommendations")
+    @GetMapping({"/recommendations", "/recommend"})
     public ResponseEntity<RecommendationsResponse> recommendations(
             @RequestParam(name = "memberId", required = false) Long memberIdParam,
             @RequestParam(name = "limit", required = false, defaultValue = "12") int limit,
