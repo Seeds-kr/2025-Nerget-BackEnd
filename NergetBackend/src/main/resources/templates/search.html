@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>검색 - Nerget</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 8px; }
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            overflow-x: auto;
+        }
+        .nav a {
+            text-decoration: none;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            color: #333;
+            white-space: nowrap;
+        }
+        .nav a.active { background: #000; color: white; }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        .mbti-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .mbti-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .mbti-card:hover {
+            transform: scale(1.05);
+        }
+        .mbti-code {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .mbti-keyword {
+            font-size: 14px;
+            color: #666;
+        }
+        .results {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .result-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #ddd;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 MBTI 검색</h1>
+        <div class="nav">
+            <a href="/home">홈</a>
+            <a href="/search" class="active">검색</a>
+            <a href="/community">커뮤니티</a>
+            <a href="/post/upload">업로드</a>
+            <a href="/mypage">마이페이지</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2 style="margin-bottom: 16px;">스타일 타입 선택</h2>
+        <div id="mbti-types" class="mbti-grid">
+            <div class="loading">MBTI 타입 불러오는 중...</div>
+        </div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+
+        async function loadMbtiTypes() {
+            try {
+                const response = await fetch('/api/style/types', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                const html = data.types.map(type => `
+                    <div class="mbti-card" onclick="searchByMbti('${type.code}')">
+                        <div class="mbti-code">${type.code}</div>
+                        <div class="mbti-keyword">${type.keyword}</div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('mbti-types').innerHTML = html;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('mbti-types').innerHTML = '<div class="loading">타입을 불러올 수 없습니다</div>';
+            }
+        }
+
+        async function searchByMbti(code) {
+            document.getElementById('results').innerHTML = '<div class="loading">검색 중...</div>';
+            
+            try {
+                const response = await fetch(`/api/style/types/${code}?limit=12`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                const html = data.map(item => `
+                    <div class="result-item">
+                        <img src="${item.imageUrl}" 
+                             onerror="this.src='https://picsum.photos/300/200?random=' + Math.random()"
+                             alt="${code} 스타일">
+                    </div>
+                `).join('');
+                
+                document.getElementById('results').innerHTML = html || '<div class="loading">결과가 없습니다</div>';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('results').innerHTML = '<div class="loading">검색 실패</div>';
+            }
+        }
+
+        loadMbtiTypes();
+    </script>
+</body>
+</html>
+

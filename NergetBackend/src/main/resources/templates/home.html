@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홈 - Nerget</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 8px; }
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            overflow-x: auto;
+        }
+        .nav a {
+            text-decoration: none;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            color: #333;
+            white-space: nowrap;
+        }
+        .nav a.active { background: #000; color: white; }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        .feed-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .feed-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            background: #ddd;
+        }
+        .feed-info {
+            padding: 16px;
+        }
+        .feed-score {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏠 홈 피드</h1>
+        <div class="nav">
+            <a href="/home" class="active">홈</a>
+            <a href="/search">검색</a>
+            <a href="/community">커뮤니티</a>
+            <a href="/post/upload">업로드</a>
+            <a href="/mypage">마이페이지</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="feed">
+            <div class="loading">추천 피드 불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        
+        // 임시 memberId (실제로는 JWT에서 파싱)
+        const memberId = 1;
+
+        async function loadFeed() {
+            try {
+                const response = await fetch(`/api/home/recommend?memberId=${memberId}&limit=20`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                const feedHtml = data.items.map(item => `
+                    <div class="feed-item">
+                        <img src="${item.imageUrl}" class="feed-image" 
+                             onerror="this.src='https://picsum.photos/600/400?random=' + Math.random()"
+                             alt="추천 이미지">
+                        <div class="feed-info">
+                            <div class="feed-score">🎯 매칭 점수: ${(item.score * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('feed').innerHTML = feedHtml || '<div class="loading">추천할 이미지가 없습니다</div>';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('feed').innerHTML = '<div class="loading">피드를 불러올 수 없습니다</div>';
+            }
+        }
+
+        loadFeed();
+    </script>
+</body>
+</html>
+

@@ -50,5 +50,45 @@ public class ViewController {
         model.addAttribute("mbti", mbti);
         return "result";
     }
+
+    /**
+     * 홈 피드 페이지
+     */
+    @GetMapping("/home")
+    public String home() {
+        return "home";
+    }
+
+    /**
+     * 검색 페이지
+     */
+    @GetMapping("/search")
+    public String search() {
+        return "search";
+    }
+
+    /**
+     * 게시물 업로드 페이지
+     */
+    @GetMapping("/post/upload")
+    public String postUpload() {
+        return "post-upload";
+    }
+
+    /**
+     * 커뮤니티 피드 페이지
+     */
+    @GetMapping("/community")
+    public String community() {
+        return "community";
+    }
+
+    /**
+     * 마이페이지
+     */
+    @GetMapping("/mypage")
+    public String mypage() {
+        return "mypage";
+    }
 }
 

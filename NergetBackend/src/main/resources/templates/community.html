@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커뮤니티 - Nerget</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 8px; }
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            overflow-x: auto;
+        }
+        .nav a {
+            text-decoration: none;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            color: #333;
+            white-space: nowrap;
+        }
+        .nav a.active { background: #000; color: white; }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        .post {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .post-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .post-user {
+            font-weight: 600;
+        }
+        .post-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            background: #ddd;
+        }
+        .post-content {
+            padding: 16px;
+        }
+        .post-actions {
+            display: flex;
+            gap: 16px;
+            padding: 0 16px 16px;
+        }
+        .post-action {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .post-stats {
+            padding: 0 16px 16px;
+            color: #666;
+            font-size: 14px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👥 커뮤니티</h1>
+        <div class="nav">
+            <a href="/home">홈</a>
+            <a href="/search">검색</a>
+            <a href="/community" class="active">커뮤니티</a>
+            <a href="/post/upload">업로드</a>
+            <a href="/mypage">마이페이지</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="posts">
+            <div class="loading">게시글 불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const memberId = 1; // 임시
+
+        async function loadPosts() {
+            try {
+                const response = await fetch('/api/posts?memberId=' + memberId, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                const postsHtml = data.posts.map(post => `
+                    <div class="post">
+                        <div class="post-header">
+                            <div class="post-user">@${post.nickname || 'user' + post.memberId}</div>
+                        </div>
+                        ${post.imageUrl ? `<img src="${post.imageUrl}" class="post-image" 
+                            onerror="this.src='https://picsum.photos/600/400?random=' + Math.random()"
+                            alt="Post image">` : ''}
+                        ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
+                        <div class="post-actions">
+                            <button class="post-action" onclick="toggleLike(${post.id}, ${post.isLiked})">
+                                ${post.isLiked ? '❤️' : '🤍'} ${post.likeCount}
+                            </button>
+                            <button class="post-action" onclick="showComments(${post.id})">
+                                💬 ${post.commentCount}
+                            </button>
+                            <button class="post-action" onclick="toggleBookmark(${post.id}, ${post.isBookmarked})">
+                                ${post.isBookmarked ? '🔖' : '📑'}
+                            </button>
+                        </div>
+                        <div class="post-stats">
+                            조회 ${post.viewCount} · ${new Date(post.createdAt).toLocaleDateString()}
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('posts').innerHTML = postsHtml || '<div class="loading">게시글이 없습니다</div>';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('posts').innerHTML = '<div class="loading">게시글을 불러올 수 없습니다</div>';
+            }
+        }
+
+        async function toggleLike(postId, isLiked) {
+            try {
+                await fetch(`/api/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ memberId })
+                });
+                loadPosts();
+            } catch (error) {
+                console.error('Like error:', error);
+            }
+        }
+
+        async function toggleBookmark(postId, isBookmarked) {
+            try {
+                await fetch(`/api/posts/${postId}/bookmark`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ memberId })
+                });
+                loadPosts();
+            } catch (error) {
+                console.error('Bookmark error:', error);
+            }
+        }
+
+        function showComments(postId) {
+            alert(`댓글 기능은 추후 구현 예정입니다. (Post ID: ${postId})`);
+        }
+
+        loadPosts();
+    </script>
+</body>
+</html>
+
