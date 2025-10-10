@@ -285,10 +285,19 @@ public class ChoiceService {
     // ======================================================
     // 4) 홈 추천: 취향 벡터 기반 상위 N개 + URL 조립(퍼블릭 베이스)
     // ======================================================
+    /**
+     * 홈 피드 추천
+     * 
+     * 현재: DB 벡터 유사도 기반 추천
+     * 실제 연동: AI 서버 POST /reco/by-user-vector 호출
+     */
     public List<RecommendationItem> recommendHomeFeed(Long memberId, int limit) {
         MemberPrefVector pref = memberPrefVectorRepository.findById(memberId).orElse(null);
         if (pref == null) return List.of();
 
+        // ============================================================
+        // 현재: DB 벡터 유사도 계산 (테스트용)
+        // ============================================================
         // 성능용 네이티브 쿼리 권장: findTopByPrefVector
         List<ImageVector> top;
         try {
@@ -312,6 +321,35 @@ public class ChoiceService {
             String url = toPublicUrl(iv.getS3Key());
             return new RecommendationItem(iv.getId(), url, score);
         }).collect(Collectors.toList());
+
+        // ============================================================
+        // 실제 AI 서버 연동 코드 (주석 해제 후 사용)
+        // ============================================================
+        // try {
+        //     // AI 서버에 유저 벡터 전송 → 추천 이미지 받기
+        //     Map<String, Object> requestBody = Map.of(
+        //         "vector", new float[]{pref.getV1(), pref.getV2(), pref.getV3(), pref.getV4()},
+        //         "top_k", limit
+        //     );
+        //     
+        //     List<Map<String, Object>> aiResponse = aiWebClient.post()
+        //             .uri("/reco/by-user-vector")
+        //             .bodyValue(requestBody)
+        //             .retrieve()
+        //             .bodyToFlux(Map.class)
+        //             .collectList()
+        //             .block();
+        //     
+        //     return aiResponse.stream()
+        //             .map(item -> new RecommendationItem(
+        //                 (String) item.get("image_id"),
+        //                 (String) item.get("url"),
+        //                 ((Number) item.get("score")).floatValue()
+        //             ))
+        //             .collect(Collectors.toList());
+        // } catch (Exception e) {
+        //     throw new RuntimeException("AI 추천 실패: " + e.getMessage(), e);
+        // }
     }
 
     private float dot(ImageVector x, float p1, float p2, float p3, float p4) {
