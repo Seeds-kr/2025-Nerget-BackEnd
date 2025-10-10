@@ -2,22 +2,55 @@ package com.seeds.NergetBackend.domain.search.controller;
 
 import com.seeds.NergetBackend.domain.home.dto.RecommendationItemDto;
 import com.seeds.NergetBackend.domain.flow.service.ImageVectorService;
+import com.seeds.NergetBackend.domain.search.dto.MbtiTypeDto;
+import com.seeds.NergetBackend.domain.search.dto.MbtiTypesResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/search")
+@RequestMapping("/api")
 @RequiredArgsConstructor
+@Tag(name = "검색/스타일", description = "MBTI 스타일 검색 API")
 public class SearchController {
 
     private final ImageVectorService imageVectorService;
 
-    @GetMapping("/mbti/{code}")
+    @Operation(summary = "MBTI 타입 목록 조회", description = "모든 MBTI 타입과 스타일 키워드를 조회합니다.")
+    @GetMapping("/style/types")
+    public ResponseEntity<MbtiTypesResponse> getMbtiTypes() {
+        List<MbtiTypeDto> types = new ArrayList<>();
+        
+        // 16가지 MBTI 타입 정의 (ChoiceService의 styleKeywordOf와 동일)
+        types.add(MbtiTypeDto.builder().code("SFGE").keyword("미니멀 모던").build());
+        types.add(MbtiTypeDto.builder().code("SFGN").keyword("미니멀 내추럴").build());
+        types.add(MbtiTypeDto.builder().code("SFPE").keyword("캐주얼 스트리트").build());
+        types.add(MbtiTypeDto.builder().code("SFPN").keyword("캐주얼 베이직").build());
+        types.add(MbtiTypeDto.builder().code("SCGE").keyword("클래식 포멀").build());
+        types.add(MbtiTypeDto.builder().code("SCGN").keyword("클래식 트래디셔널").build());
+        types.add(MbtiTypeDto.builder().code("SCPE").keyword("포멀 콘템포러리").build());
+        types.add(MbtiTypeDto.builder().code("SCPN").keyword("포멀 베이식").build());
+        types.add(MbtiTypeDto.builder().code("BFGE").keyword("로맨틱 러블리").build());
+        types.add(MbtiTypeDto.builder().code("BFGN").keyword("로맨틱 내추럴").build());
+        types.add(MbtiTypeDto.builder().code("BFPE").keyword("보헤미안 믹스").build());
+        types.add(MbtiTypeDto.builder().code("BFPN").keyword("빈티지 캐주얼").build());
+        types.add(MbtiTypeDto.builder().code("BCGE").keyword("아방가르드").build());
+        types.add(MbtiTypeDto.builder().code("BCGN").keyword("모던 시크").build());
+        types.add(MbtiTypeDto.builder().code("BCPE").keyword("트렌디 하이브리드").build());
+        types.add(MbtiTypeDto.builder().code("BCPN").keyword("뉴트럴 클래식").build());
+        
+        return ResponseEntity.ok(MbtiTypesResponse.builder().types(types).build());
+    }
+
+    @Operation(summary = "MBTI 타입별 게시물 조회", description = "특정 MBTI 스타일의 이미지를 조회합니다.")
+    @GetMapping("/style/types/{id}")
     public ResponseEntity<List<RecommendationItemDto>> searchByMbti(
-            @PathVariable String code,
+            @PathVariable("id") String code,
             @RequestParam(defaultValue = "24") int limit) {
         
         // MBTI 코드 정규화 (대문자)
