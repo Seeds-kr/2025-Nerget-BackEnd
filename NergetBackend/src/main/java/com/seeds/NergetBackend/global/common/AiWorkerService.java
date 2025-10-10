@@ -34,9 +34,10 @@ public class AiWorkerService {
         List<float[]> vectors = new ArrayList<>();
 
         try {
+            // 테스트용: 즉시 완료 처리 (AI 분석 생략)
             for (String key : s3Keys) {
-                // --- 실제 로직에서는 AIClient 호출 ---
-                float[] vec = embeddingService.embed(key); // Mock
+                // Mock 벡터 생성
+                float[] vec = embeddingService.embed(key);
                 vectors.add(vec);
 
                 // 각 이미지 DONE 처리
@@ -47,7 +48,7 @@ public class AiWorkerService {
                 imageVectorService.saveVectorDone(iv.getId(), vec, null);
             }
 
-            // 모든 벡터 평균 → Job 완료 처리
+            // 모든 벡터 평균 → Job 완료 처리 (즉시)
             jobService.markDone(jobId, vectors);
 
         } catch (Exception ex) {

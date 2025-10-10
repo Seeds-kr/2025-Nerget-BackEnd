@@ -17,7 +17,7 @@ public class CandidateService {
     /** 초기 분석이 DONE일 때만 12장 후보 제공, 아니면 null 반환 */
     public CandidatesResponse getCandidatesOrNull(String jobId, int count) {
         Job job = jobService.getJob(jobId);
-        if (!"DONE".equals(job.getStatus())) return null;
+        if (job.getStatus() != Job.Status.DONE) return null;
         return new CandidatesResponse(vectorStore.getRandomCandidates(count));
     }
 }

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nerget - 스타일 선택</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding: 2rem 0;
+      }
+      .container {
+        max-width: 900px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .header h1 {
+        color: #667eea;
+        font-weight: bold;
+      }
+      .card-container {
+        position: relative;
+        height: 500px;
+        margin-bottom: 2rem;
+      }
+      .swipe-card {
+        position: absolute;
+        width: 100%;
+        max-width: 400px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s;
+      }
+      .swipe-card img {
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+      }
+      .swipe-buttons {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .swipe-buttons button {
+        margin: 0 1rem;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        font-size: 2rem;
+        border: none;
+      }
+      .btn-dislike {
+        background: #ff6b6b;
+        color: white;
+      }
+      .btn-like {
+        background: #51cf66;
+        color: white;
+      }
+      .counter {
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        color: #667eea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>💖 스타일을 선택하세요</h1>
+        <p>좋아요 ❤️ 또는 싫어요 👎</p>
+      </div>
+
+      <div class="counter" id="counter">0 / 12</div>
+
+      <div class="card-container" id="cardContainer">
+        <!-- 카드는 JavaScript로 동적 생성 -->
+      </div>
+
+      <div class="swipe-buttons">
+        <button class="btn btn-dislike" onclick="swipe('dislike')">👎</button>
+        <button class="btn btn-like" onclick="swipe('like')">❤️</button>
+      </div>
+    </div>
+
+    <script>
+      const jobId =
+        new URLSearchParams(window.location.search).get("jobId") ||
+        "8e965660-367f-4900-822b-e6ae28e755dd";
+      console.log("JobId:", jobId);
+      let candidates = [];
+      let currentIndex = 0;
+      let likedIds = [];
+      let dislikedIds = [];
+
+      async function loadCandidates() {
+        console.log("Loading candidates for jobId:", jobId);
+        try {
+          const response = await fetch(
+            `/api/candidates?jobId=${jobId}&count=12`
+          );
+          console.log("Response status:", response.status);
+
+          if (!response.ok) {
+            const error = await response.text();
+            console.error("API Error:", error);
+            alert("후보 이미지 로드 실패: " + response.status);
+            return;
+          }
+
+          const data = await response.json();
+          console.log("Candidates loaded:", data);
+
+          if (!data.images || data.images.length === 0) {
+            alert("후보 이미지가 없습니다");
+            return;
+          }
+
+          candidates = data.images;
+          showCard(currentIndex);
+        } catch (error) {
+          console.error("Error:", error);
+          alert("후보 이미지 로드 실패: " + error.message);
+        }
+      }
+
+      function showCard(index) {
+        console.log(
+          "showCard called, index:",
+          index,
+          "total:",
+          candidates.length
+        );
+        if (index >= candidates.length) {
+          submitChoices();
+          return;
+        }
+
+        const candidate = candidates[index];
+        console.log("Showing card:", candidate);
+
+        const container = document.getElementById("cardContainer");
+        container.innerHTML = `
+                <div class="swipe-card">
+                    <img src="${candidate.url}" alt="Style" onerror="console.error('Image load failed:', this.src)">
+                </div>
+            `;
+
+        document.getElementById("counter").textContent = `${index + 1} / ${
+          candidates.length
+        }`;
+      }
+
+      function swipe(action) {
+        const current = candidates[currentIndex];
+
+        if (action === "like") {
+          likedIds.push(current.id); // ✅ imageId → id
+        } else {
+          dislikedIds.push(current.id); // ✅ imageId → id
+        }
+
+        currentIndex++;
+        showCard(currentIndex);
+      }
+
+      async function submitChoices() {
+        try {
+          const response = await fetch("/api/choices", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              jobId: jobId,
+              selected: [
+                ...likedIds.map((id) => ({ id, like: true })),
+                ...dislikedIds.map((id) => ({ id, like: false })),
+              ],
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            window.location.href = `/result?mbti=${data.mbti}`;
+          } else {
+            alert("선택 제출 실패");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("오류가 발생했습니다");
+        }
+      }
+
+      // 페이지 로드 시 후보 이미지 로드
+      loadCandidates();
+    </script>
+  </body>
+</html>

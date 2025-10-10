@@ -26,12 +26,16 @@ public class JobService {
     /** 새 Job 생성 (타입 지정) */
     @Transactional
     public Job createJob(String userId, List<String> uris, Job.Type type) {
-        // 사용자당 동일 타입 Job은 1개만 허용
+        // 사용자당 동일 타입 Job은 1개만 허용 - 있으면 재사용
         if (type == Job.Type.ONBOARDING) {
-            jobRepository.findByUserIdAndType(userId, type)
-                    .ifPresent(existingJob -> {
-                        throw new IllegalStateException("User already has an ONBOARDING job");
-                    });
+            var existing = jobRepository.findByUserIdAndType(userId, type);
+            if (existing.isPresent()) {
+                Job existingJob = existing.get();
+                // 테스트용: 기존 Job을 PENDING으로 리셋
+                existingJob.setStatus(Job.Status.PENDING);
+                existingJob.setProgress(0);
+                return jobRepository.save(existingJob);
+            }
         }
 
         Job job = Job.builder()
@@ -95,12 +99,16 @@ public class JobService {
 
     @Transactional
     public Job createEmptyJob(String userId, Job.Type type) {
-        // 사용자당 동일 타입 Job은 1개만 허용
+        // 사용자당 동일 타입 Job은 1개만 허용 - 있으면 재사용
         if (type == Job.Type.ONBOARDING) {
-            jobRepository.findByUserIdAndType(userId, type)
-                    .ifPresent(existingJob -> {
-                        throw new IllegalStateException("User already has an ONBOARDING job");
-                    });
+            var existing = jobRepository.findByUserIdAndType(userId, type);
+            if (existing.isPresent()) {
+                Job existingJob = existing.get();
+                // 테스트용: 기존 Job을 DONE 상태로 업데이트하여 재사용
+                existingJob.setStatus(Job.Status.DONE);
+                existingJob.setProgress(100);
+                return jobRepository.save(existingJob);
+            }
         }
 
         Job job = Job.builder()

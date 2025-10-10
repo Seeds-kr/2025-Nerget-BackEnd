@@ -27,22 +27,28 @@ public class SearchController {
         List<MbtiTypeDto> types = new ArrayList<>();
         
         // 16가지 MBTI 타입 정의 (ChoiceService의 styleKeywordOf와 동일)
-        types.add(MbtiTypeDto.builder().code("SFGE").keyword("미니멀 모던").build());
-        types.add(MbtiTypeDto.builder().code("SFGN").keyword("미니멀 내추럴").build());
-        types.add(MbtiTypeDto.builder().code("SFPE").keyword("캐주얼 스트리트").build());
-        types.add(MbtiTypeDto.builder().code("SFPN").keyword("캐주얼 베이직").build());
-        types.add(MbtiTypeDto.builder().code("SCGE").keyword("클래식 포멀").build());
-        types.add(MbtiTypeDto.builder().code("SCGN").keyword("클래식 트래디셔널").build());
-        types.add(MbtiTypeDto.builder().code("SCPE").keyword("포멀 콘템포러리").build());
-        types.add(MbtiTypeDto.builder().code("SCPN").keyword("포멀 베이식").build());
-        types.add(MbtiTypeDto.builder().code("BFGE").keyword("로맨틱 러블리").build());
-        types.add(MbtiTypeDto.builder().code("BFGN").keyword("로맨틱 내추럴").build());
-        types.add(MbtiTypeDto.builder().code("BFPE").keyword("보헤미안 믹스").build());
-        types.add(MbtiTypeDto.builder().code("BFPN").keyword("빈티지 캐주얼").build());
-        types.add(MbtiTypeDto.builder().code("BCGE").keyword("아방가르드").build());
-        types.add(MbtiTypeDto.builder().code("BCGN").keyword("모던 시크").build());
-        types.add(MbtiTypeDto.builder().code("BCPE").keyword("트렌디 하이브리드").build());
-        types.add(MbtiTypeDto.builder().code("BCPN").keyword("뉴트럴 클래식").build());
+        // S(Showy/화려), B(Basic/단조), F(Formal/미니멀), C(Comfort/맥시멀)
+        // G(Glamorous/트렌디), P(Practical/클래식), E(Experimental/도전), N(Natural/안정)
+        
+        // S (Showy/화려) 계열
+        types.add(MbtiTypeDto.builder().code("SFGE").keyword("모던 시크").build());
+        types.add(MbtiTypeDto.builder().code("SFGN").keyword("세련된 모던").build());
+        types.add(MbtiTypeDto.builder().code("SFPE").keyword("엘레강스").build());
+        types.add(MbtiTypeDto.builder().code("SFPN").keyword("미니멀 클래식").build());
+        types.add(MbtiTypeDto.builder().code("SCGE").keyword("아방가르드").build());
+        types.add(MbtiTypeDto.builder().code("SCGN").keyword("화려한 캐주얼").build());
+        types.add(MbtiTypeDto.builder().code("SCPE").keyword("럭셔리 빈티지").build());
+        types.add(MbtiTypeDto.builder().code("SCPN").keyword("클래식 포멀").build());
+        
+        // B (Basic/단조) 계열
+        types.add(MbtiTypeDto.builder().code("BFGE").keyword("미니멀 트렌디").build());
+        types.add(MbtiTypeDto.builder().code("BFGN").keyword("심플 모던").build());
+        types.add(MbtiTypeDto.builder().code("BFPE").keyword("절제된 클래식").build());
+        types.add(MbtiTypeDto.builder().code("BFPN").keyword("심플 베이직").build());
+        types.add(MbtiTypeDto.builder().code("BCGE").keyword("보헤미안").build());
+        types.add(MbtiTypeDto.builder().code("BCGN").keyword("캐주얼 모던").build());
+        types.add(MbtiTypeDto.builder().code("BCPE").keyword("빈티지 믹스").build());
+        types.add(MbtiTypeDto.builder().code("BCPN").keyword("편안한 베이직").build());
         
         return ResponseEntity.ok(MbtiTypesResponse.builder().types(types).build());
     }

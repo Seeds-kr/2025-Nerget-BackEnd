@@ -5,6 +5,7 @@ import com.seeds.NergetBackend.domain.flow.entity.Job;
 import com.seeds.NergetBackend.domain.flow.entity.ImageVector;
 import com.seeds.NergetBackend.domain.flow.service.ImageVectorService;
 import com.seeds.NergetBackend.domain.flow.service.JobService;
+import com.seeds.NergetBackend.global.common.AiWorkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,6 +29,7 @@ public class FlowController {
 
     private final JobService jobService;
     private final ImageVectorService imageVectorService;
+    private final AiWorkerService aiWorkerService;
 
     @Operation(summary = "이미지 처리 시작", description = "S3에 업로드된 이미지들을 AI로 처리하기 시작합니다.")
     @ApiResponses(value = {
@@ -58,6 +60,9 @@ public class FlowController {
 
                 // 2) 이미지들을 Job과 연결하여 PENDING 등록
                 imageVectorService.registerPendingBatch(req.userId, req.s3Keys, req.metaJson, job.getId());
+
+                // 3) AI 분석 시작 (즉시 실행)
+                aiWorkerService.processJob(job.getId(), req.s3Keys);
             }
 
             JobStartResp resp = new JobStartResp();

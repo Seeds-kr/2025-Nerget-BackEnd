@@ -257,23 +257,27 @@ public class ChoiceService {
     private String styleKeywordOf(String mbti) {
         if (mbti == null) return "UNDEFINED";
         String k = mbti.trim();
+        // S(Showy/화려), B(Basic/단조), F(Formal/미니멀), C(Comfort/맥시멀)
+        // G(Glamorous/트렌디), P(Practical/클래식), E(Experimental/도전), N(Natural/안정)
         switch (k) {
-            case "SFGE": return "미니멀 모던";
-            case "SFGN": return "미니멀 내추럴";
-            case "SFPE": return "캐주얼 스트리트";
-            case "SFPN": return "캐주얼 베이식";
-            case "SCGE": return "클래식 포멀";
-            case "SCGN": return "클래식 트래디셔널";
-            case "SCPE": return "포멀 콘템포러리";
-            case "SCPN": return "포멀 베이식";
-            case "BFGE": return "로맨틱 러블리";
-            case "BFGN": return "로맨틱 내추럴";
-            case "BFPE": return "보헤미안 믹스";
-            case "BFPN": return "빈티지 캐주얼";
-            case "BCGE": return "아방가르드";
-            case "BCGN": return "모던 시크";
-            case "BCPE": return "트렌디 하이브리드";
-            case "BCPN": return "뉴트럴 클래식";
+            // S (Showy/화려) 계열
+            case "SFGE": return "모던 시크";          // 화려·미니멀·트렌디·도전
+            case "SFGN": return "세련된 모던";        // 화려·미니멀·트렌디·안정
+            case "SFPE": return "엘레강스";          // 화려·미니멀·클래식·도전
+            case "SFPN": return "미니멀 클래식";      // 화려·미니멀·클래식·안정
+            case "SCGE": return "아방가르드";        // 화려·맥시멀·트렌디·도전
+            case "SCGN": return "화려한 캐주얼";      // 화려·맥시멀·트렌디·안정
+            case "SCPE": return "럭셔리 빈티지";      // 화려·맥시멀·클래식·도전
+            case "SCPN": return "클래식 포멀";       // 화려·맥시멀·클래식·안정
+            // B (Basic/단조) 계열
+            case "BFGE": return "미니멀 트렌디";      // 단조·미니멀·트렌디·도전
+            case "BFGN": return "심플 모던";         // 단조·미니멀·트렌디·안정
+            case "BFPE": return "절제된 클래식";      // 단조·미니멀·클래식·도전
+            case "BFPN": return "심플 베이직";       // 단조·미니멀·클래식·안정
+            case "BCGE": return "보헤미안";          // 단조·맥시멀·트렌디·도전
+            case "BCGN": return "캐주얼 모던";       // 단조·맥시멀·트렌디·안정
+            case "BCPE": return "빈티지 믹스";       // 단조·맥시멀·클래식·도전
+            case "BCPN": return "편안한 베이직";     // 단조·맥시멀·클래식·안정
             default: return "GENERIC";
         }
     }
