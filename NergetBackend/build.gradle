@@ -51,6 +51,9 @@ dependencies {
     // Swagger/OpenAPI 3 (Spring Boot 3.x 호환)
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
+    // WebClient for AI server communication
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -58,4 +61,14 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// AWS 배포를 위한 JAR 파일 생성
+jar {
+    enabled = false
+    archiveClassifier = ''
+}
+
+bootJar {
+    archiveFileName = 'nerget-backend.jar'
 }
