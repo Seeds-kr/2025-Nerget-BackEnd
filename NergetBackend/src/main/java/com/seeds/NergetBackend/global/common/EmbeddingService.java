@@ -1,19 +1,19 @@
 package com.seeds.NergetBackend.global.common;
 
 import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.core.io.FileSystemResource;
-// import org.springframework.http.MediaType;
-// import org.springframework.http.client.MultipartBodyBuilder;
-// import org.springframework.web.reactive.function.BodyInserters;
-// import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.stereotype.Service;
 
-// import java.io.File;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-// import java.util.Map;
-import java.util.Random;
+import java.util.Map;
 
 @Service
 public class EmbeddingService {
@@ -23,56 +23,70 @@ public class EmbeddingService {
     @Value("${ai.server.url}")
     private String aiServerUrl;
 
-    // 실제 AI 서버 연동 시 주석 해제
-    // @Autowired
-    // private WebClient aiWebClient;
+    @Autowired
+    private WebClient aiWebClient;
 
     /** 
      * 단일 이미지 URI를 벡터로 변환
-     * 
-     * 현재: Mock 랜덤 벡터 생성
-     * 실제 연동: AI 서버 POST /images/analyze 호출
+     * AI 서버 POST /images/analyze 호출
      */
     public float[] embed(String uri) {
-        // ============================================================
-        // 현재: Mock 구현 (테스트용)
-        // ============================================================
-        float[] v = new float[DIM];
-        Random r = new Random(uri.hashCode());
-        for (int i = 0; i < DIM; i++) {
-            v[i] = (float) r.nextGaussian();
+        try {
+            // S3 URL에서 이미지 다운로드
+            File imageFile = downloadImageFromS3(uri);
+            
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("file", new FileSystemResource(imageFile));
+            
+            Map<String, Object> response = aiWebClient.post()
+                    .uri("/images/analyze?conf_threshold=0.8")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData(builder.build()))
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+            
+            // AI 응답에서 벡터 추출
+            float[] vector = new float[DIM];
+            vector[0] = ((Number) response.get("v1")).floatValue();
+            vector[1] = ((Number) response.get("v2")).floatValue();
+            vector[2] = ((Number) response.get("v3")).floatValue();
+            vector[3] = ((Number) response.get("v4")).floatValue();
+            
+            // 임시 파일 삭제
+            imageFile.delete();
+            
+            return vector;
+        } catch (Exception e) {
+            // AI 서버 연동 실패 시 Mock 벡터 반환
+            System.err.println("AI 서버 연동 실패, Mock 벡터 사용: " + e.getMessage());
+            float[] v = new float[DIM];
+            java.util.Random r = new java.util.Random(uri.hashCode());
+            for (int i = 0; i < DIM; i++) {
+                v[i] = (float) r.nextGaussian();
+            }
+            return v;
         }
-        return v;
+    }
 
-        // ============================================================
-        // 실제 AI 서버 연동 코드 (주석 해제 후 사용)
-        // ============================================================
-        // try {
-        //     // 이미지 파일이 로컬에 있다면
-        //     File imageFile = new File(uri);
-        //     
-        //     MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        //     builder.part("file", new FileSystemResource(imageFile));
-        //     
-        //     Map<String, Object> response = aiWebClient.post()
-        //             .uri("/images/analyze?conf_threshold=0.8")
-        //             .contentType(MediaType.MULTIPART_FORM_DATA)
-        //             .body(BodyInserters.fromMultipartData(builder.build()))
-        //             .retrieve()
-        //             .bodyToMono(Map.class)
-        //             .block();
-        //     
-        //     // AI 응답에서 벡터 추출
-        //     float[] vector = new float[DIM];
-        //     vector[0] = ((Number) response.get("v1")).floatValue();
-        //     vector[1] = ((Number) response.get("v2")).floatValue();
-        //     vector[2] = ((Number) response.get("v3")).floatValue();
-        //     vector[3] = ((Number) response.get("v4")).floatValue();
-        //     
-        //     return vector;
-        // } catch (Exception e) {
-        //     throw new RuntimeException("AI 이미지 분석 실패: " + e.getMessage(), e);
-        // }
+    /**
+     * S3 URL에서 이미지를 다운로드하여 임시 파일로 저장
+     */
+    private File downloadImageFromS3(String s3Url) throws IOException {
+        // S3 URL에서 이미지 다운로드
+        java.net.URL url = new java.net.URL(s3Url);
+        java.io.InputStream inputStream = url.openStream();
+        
+        // 임시 파일 생성
+        File tempFile = File.createTempFile("image_", ".jpg");
+        tempFile.deleteOnExit();
+        
+        // 파일에 저장
+        java.nio.file.Files.copy(inputStream, tempFile.toPath(), 
+            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        inputStream.close();
+        
+        return tempFile;
     }
 
     /** 여러 이미지 임베딩 */

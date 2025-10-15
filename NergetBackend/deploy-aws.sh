@@ -15,7 +15,11 @@ fi
 
 echo "✅ JAR 파일 생성 완료: build/libs/nerget-backend.jar"
 
-# 3. AWS Elastic Beanstalk 배포 (EB CLI 설치 필요)
+# 3. JAR 파일을 루트로 복사 (Elastic Beanstalk 요구사항)
+echo "📋 JAR 파일을 루트로 복사 중..."
+cp build/libs/nerget-backend.jar ./
+
+# 4. AWS Elastic Beanstalk 배포 (EB CLI 설치 필요)
 if command -v eb &> /dev/null; then
     echo "🌐 Elastic Beanstalk에 배포 중..."
     eb deploy

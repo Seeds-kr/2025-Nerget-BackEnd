@@ -1,6 +1,9 @@
 package com.seeds.NergetBackend.global.common;
 
 import com.seeds.NergetBackend.domain.candidate.dto.CandidateImageDto;
+import com.seeds.NergetBackend.domain.flow.entity.ImageVector;
+import com.seeds.NergetBackend.domain.flow.repository.ImageVectorRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -10,31 +13,37 @@ import java.util.Random;
 @Service
 public class AwsVectorStoreMock implements VectorStore {
 
-    private static final int DIM = 4; // 모킹 차원 (실제는 512/768 등)
+    @Autowired
+    private ImageVectorRepository imageVectorRepository;
 
     @Override
     public List<CandidateImageDto> getRandomCandidates(int count) {
-        List<CandidateImageDto> out = new ArrayList<>();
-        Random r = new Random();
-        for (int i = 0; i < count; i++) {
-            String id = "aws-" + Math.abs(r.nextInt());
-            String url = "https://cdn.example.com/" + id + ".jpg"; // 실제: S3/CloudFront URL
-            out.add(new CandidateImageDto(id, url));
+        // 실제 데이터베이스에서 랜덤 이미지 벡터들을 가져옴
+        List<ImageVector> vectors = imageVectorRepository.findAll();
+        List<CandidateImageDto> candidates = new ArrayList<>();
+        
+        // 랜덤하게 count개만 선택
+        int maxCount = Math.min(count, vectors.size());
+        for (int i = 0; i < maxCount; i++) {
+            ImageVector vector = vectors.get(i);
+            candidates.add(new CandidateImageDto(
+                vector.getId(), 
+                vector.getS3Key() // S3 키를 URL로 사용
+            ));
         }
-        return out;
+        
+        return candidates;
     }
 
     @Override
     public List<float[]> getVectorsByIds(List<String> ids) {
-        List<float[]> vecs = new ArrayList<>();
-        for (String id : ids) vecs.add(mockVectorForId(id));
-        return vecs;
-    }
-
-    private float[] mockVectorForId(String id) {
-        float[] v = new float[DIM];
-        Random r = new Random(id.hashCode());
-        for (int i = 0; i < DIM; i++) v[i] = (float) r.nextGaussian();
-        return v;
+        List<ImageVector> vectors = imageVectorRepository.findAllById(ids);
+        List<float[]> result = new ArrayList<>();
+        
+        for (ImageVector vector : vectors) {
+            result.add(vector.toArray()); // toArray() 메서드 사용
+        }
+        
+        return result;
     }
 }

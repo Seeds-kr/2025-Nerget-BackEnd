@@ -1,19 +1,29 @@
 package com.seeds.NergetBackend.global.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @Controller
 public class ViewController {
 
     /**
-     * 로그인 페이지 (홈)
+     * 로그인 페이지 (홈) - API 응답
      */
     @GetMapping("/")
-    public String login() {
-        return "login";
+    public ResponseEntity<Map<String, Object>> home() {
+        return ResponseEntity.ok(Map.of(
+                "message", "NergetBackend API Server",
+                "status", "running",
+                "version", "1.0.0",
+                "swagger", "/swagger-ui.html",
+                "api-docs", "/api-docs"
+        ));
     }
 
     /**
@@ -55,7 +65,7 @@ public class ViewController {
      * 홈 피드 페이지
      */
     @GetMapping("/home")
-    public String home() {
+    public String homePage() {
         return "home";
     }
 

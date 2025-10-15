@@ -89,28 +89,4 @@ public class AuthController {
         ));
     }
 
-    @Operation(summary = "테스트 로그인", description = "개발/테스트용 로그인입니다. 실제 Google OAuth 없이 테스트 토큰을 발급합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "테스트 로그인 성공",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                                        "isNewUser": false
-                                    }
-                                    """))),
-            @ApiResponse(responseCode = "500", description = "테스트 유저가 존재하지 않음")
-    })
-    @PostMapping("/test-login")
-    public ResponseEntity<AuthResponseDto> testLogin() {
-        // 이미 있는 유저라 가정
-        Member member = memberRepository.findByEmail("testuser@gmail.com")
-                .orElseThrow(() -> new RuntimeException("테스트 유저 없음"));
-
-        String token = jwtTokenProvider.createToken(member.getEmail());
-
-        AuthResponseDto response = new AuthResponseDto(token, false); // isNew = false
-        return ResponseEntity.ok(response);
-    }
 }

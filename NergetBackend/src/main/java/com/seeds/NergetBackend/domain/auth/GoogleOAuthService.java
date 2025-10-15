@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.seeds.NergetBackend.domain.auth.GoogleUser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,13 +15,14 @@ import java.util.Collections;
 @Service
 public class GoogleOAuthService {
 
-    private static final String CLIENT_ID = "프론트에서 발급받은 CLIENT_ID";
+    @Value("${google.client-id}")
+    private String clientId;
 
     public GoogleUser verifyIdToken(String idToken) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier
                     .Builder(new NetHttpTransport(), new JacksonFactory())
-                    .setAudience(Collections.singletonList(CLIENT_ID))
+                    .setAudience(Collections.singletonList(clientId))
                     .build();
 
             GoogleIdToken googleIdToken = verifier.verify(idToken);
