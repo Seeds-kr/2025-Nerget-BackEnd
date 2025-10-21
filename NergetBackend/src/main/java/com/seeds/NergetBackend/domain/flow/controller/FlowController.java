@@ -5,15 +5,7 @@ import com.seeds.NergetBackend.domain.flow.entity.Job;
 import com.seeds.NergetBackend.domain.flow.entity.ImageVector;
 import com.seeds.NergetBackend.domain.flow.service.ImageVectorService;
 import com.seeds.NergetBackend.domain.flow.service.JobService;
-import com.seeds.NergetBackend.global.common.AiWorkerService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.seeds.NergetBackend.shared.ai.AiWorkerService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,29 +16,14 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/flow")
-@Tag(name = "플로우 관리", description = "이미지 업로드 및 AI 처리 플로우 관리 API")
 public class FlowController {
 
     private final JobService jobService;
     private final ImageVectorService imageVectorService;
     private final AiWorkerService aiWorkerService;
 
-    @Operation(summary = "이미지 처리 시작", description = "S3에 업로드된 이미지들을 AI로 처리하기 시작합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "작업 시작 성공",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = JobStartResp.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                        "jobId": "job-12345",
-                                        "countRegistered": 3
-                                    }
-                                    """))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
     @PostMapping("/start")
     public ResponseEntity<JobStartResp> start(
-            @Parameter(description = "이미지 처리 시작 요청", required = true)
             @RequestBody StartReq req) {
         try {
             Job job;
@@ -75,24 +52,8 @@ public class FlowController {
         }
     }
 
-    @Operation(summary = "작업 상태 조회", description = "AI 이미지 처리 작업의 현재 상태와 진행률을 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "상태 조회 성공",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = JobStatusResp.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                        "jobId": "job-12345",
-                                        "status": "DONE",
-                                        "progress": 100,
-                                        "initVector": [0.1, 0.2, 0.3, 0.4]
-                                    }
-                                    """))),
-            @ApiResponse(responseCode = "404", description = "작업을 찾을 수 없음")
-    })
     @GetMapping("/{jobId}/status")
     public ResponseEntity<JobStatusResp> status(
-            @Parameter(description = "작업 ID", required = true, example = "job-12345")
             @PathVariable String jobId) {
         Job job = jobService.getJob(jobId);
 

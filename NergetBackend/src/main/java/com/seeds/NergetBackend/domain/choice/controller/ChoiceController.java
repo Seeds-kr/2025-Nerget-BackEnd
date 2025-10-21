@@ -19,24 +19,30 @@ public class ChoiceController {
 
     @PostMapping
     public ResponseEntity<?> submit(@RequestBody ChoiceRequest req) {
-        // like / dislike ID 분리
-        List<String> likeIds = new ArrayList<>();
-        List<String> dislikeIds = new ArrayList<>();
-        if (req.selected != null) {
-            for (ChoiceItem it : req.selected) {
-                if (it == null || it.id == null) continue;
-                if (it.like) likeIds.add(it.id);
-                else dislikeIds.add(it.id);
+        try {
+            // like / dislike ID 분리
+            List<String> likeIds = new ArrayList<>();
+            List<String> dislikeIds = new ArrayList<>();
+            if (req.selected != null) {
+                for (ChoiceItem it : req.selected) {
+                    if (it == null || it.id == null) continue;
+                    if (it.like) likeIds.add(it.id);
+                    else dislikeIds.add(it.id);
+                }
             }
-        }
 
-        MbtiResultDto result = choiceService.processChoicesFromIdsOrNull(
-                req.jobId, likeIds, dislikeIds
-        );
-        if (result == null) {
-            return ResponseEntity.status(409).body("Job is not DONE yet");
+            MbtiResultDto result = choiceService.processChoicesFromIdsOrNull(
+                    req.jobId, likeIds, dislikeIds
+            );
+            if (result == null) {
+                return ResponseEntity.status(409).body("Job is not DONE yet");
+            }
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body("Job not found: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Internal server error: " + e.getMessage());
         }
-        return ResponseEntity.ok(result);
     }
 
     // --- 요청 DTO (간단 내장형; 별도 파일로 분리해도 됩니다) ---

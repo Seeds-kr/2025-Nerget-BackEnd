@@ -10,7 +10,7 @@ import com.seeds.NergetBackend.domain.choice.entity.MemberPrefVector;
 import com.seeds.NergetBackend.domain.choice.repository.ImageInteractionRepository;
 import com.seeds.NergetBackend.domain.flow.repository.ImageVectorRepository;
 import com.seeds.NergetBackend.domain.flow.service.JobService;
-import com.seeds.NergetBackend.global.common.VectorStore;
+import com.seeds.NergetBackend.shared.vector.VectorStore;
 import com.seeds.NergetBackend.domain.choice.repository.MemberMbtiRepository;
 import com.seeds.NergetBackend.domain.choice.repository.MemberPrefVectorRepository;
 import lombok.RequiredArgsConstructor;

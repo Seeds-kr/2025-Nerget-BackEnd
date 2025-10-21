@@ -3,7 +3,7 @@ package com.seeds.NergetBackend.domain.candidate.service;
 import com.seeds.NergetBackend.domain.candidate.dto.CandidatesResponse;
 import com.seeds.NergetBackend.domain.flow.entity.Job;
 import com.seeds.NergetBackend.domain.flow.service.JobService;
-import com.seeds.NergetBackend.global.common.VectorStore;
+import com.seeds.NergetBackend.shared.vector.VectorStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

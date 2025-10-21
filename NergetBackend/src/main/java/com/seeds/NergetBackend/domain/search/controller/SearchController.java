@@ -4,8 +4,6 @@ import com.seeds.NergetBackend.domain.home.dto.RecommendationItemDto;
 import com.seeds.NergetBackend.domain.flow.service.ImageVectorService;
 import com.seeds.NergetBackend.domain.search.dto.MbtiTypeDto;
 import com.seeds.NergetBackend.domain.search.dto.MbtiTypesResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +14,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@Tag(name = "검색/스타일", description = "MBTI 스타일 검색 API")
 public class SearchController {
 
     private final ImageVectorService imageVectorService;
 
-    @Operation(summary = "MBTI 타입 목록 조회", description = "모든 MBTI 타입과 스타일 키워드를 조회합니다.")
     @GetMapping("/style/types")
     public ResponseEntity<MbtiTypesResponse> getMbtiTypes() {
         List<MbtiTypeDto> types = new ArrayList<>();
@@ -53,7 +49,6 @@ public class SearchController {
         return ResponseEntity.ok(MbtiTypesResponse.builder().types(types).build());
     }
 
-    @Operation(summary = "MBTI 타입별 게시물 조회", description = "특정 MBTI 스타일의 이미지를 조회합니다.")
     @GetMapping("/style/types/{id}")
     public ResponseEntity<List<RecommendationItemDto>> searchByMbti(
             @PathVariable("id") String code,

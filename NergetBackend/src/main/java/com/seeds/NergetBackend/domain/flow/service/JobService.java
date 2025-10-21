@@ -3,7 +3,7 @@ package com.seeds.NergetBackend.domain.flow.service;
 
 import com.seeds.NergetBackend.domain.flow.entity.Job;
 import com.seeds.NergetBackend.domain.flow.repository.JobRepository;
-import com.seeds.NergetBackend.global.common.EmbeddingService;
+import com.seeds.NergetBackend.shared.ai.EmbeddingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,7 +79,9 @@ public class JobService {
     /** Job 상태 조회 */
     @Transactional(readOnly = true)
     public Job getJob(String jobId) {
-        return jobRepository.findById(jobId).orElseThrow();
+        return jobRepository.findById(jobId).orElseThrow(
+            () -> new IllegalArgumentException("Job not found: " + jobId)
+        );
     }
 
     /** 초기 벡터만 필요할 때 */

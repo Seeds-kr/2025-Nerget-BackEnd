@@ -19,6 +19,10 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    all {
+        exclude group: 'commons-logging', module: 'commons-logging'
+        exclude group: 'org.apache.commons', module: 'commons-logging'
+    }
 }
 
 repositories {
@@ -31,6 +35,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // DB
     runtimeOnly 'com.mysql:mysql-connector-j'   // MySQL
@@ -47,16 +52,19 @@ dependencies {
     // Google OAuth (현재 코드에서 사용)
     implementation 'com.google.api-client:google-api-client:1.34.0'
     implementation 'com.google.http-client:google-http-client-jackson2:1.41.0'
+    implementation 'com.google.http-client:google-http-client-gson:1.41.0'
 
-    // Swagger/OpenAPI 3 (Spring Boot 3.x 호환)
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
-    // WebClient for AI server communication
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // WebClient for AI server communication (minimal WebFlux)
+    implementation 'org.springframework:spring-webflux:6.1.0'
 
     // AWS SDK for S3
     implementation 'software.amazon.awssdk:s3:2.21.29'
     implementation 'software.amazon.awssdk:auth:2.21.29'
+
+    // Bean Validation (Hibernate Validator)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
