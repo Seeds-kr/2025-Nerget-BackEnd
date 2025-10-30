@@ -12,3 +12,4 @@ public class SwipeRequest {
     private Boolean liked;    // true 또는 false
 }
 
+

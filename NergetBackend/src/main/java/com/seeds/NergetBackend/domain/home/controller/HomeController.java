@@ -39,6 +39,7 @@ public class HomeController {
         // 내부 static DTO → 외부 응답 DTO로 매핑
         List<RecommendationItemDto> items = recs.stream()
                 .map(r -> RecommendationItemDto.builder()
+                        .id(r.imageId)
                         .imageId(r.imageId)
                         .imageUrl(r.imageUrl)
                         .score(r.score)

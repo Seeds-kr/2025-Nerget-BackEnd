@@ -114,6 +114,7 @@ public class ImageVectorService {
         // RecommendationItemDto로 변환
         return matchingImages.stream()
                 .map(image -> RecommendationItemDto.builder()
+                        .id(image.getId())
                         .imageId(image.getId())
                         .imageUrl(toPublicUrl(image.getS3Key()))
                         .score(0f) // 요구사항에 따라 score=0

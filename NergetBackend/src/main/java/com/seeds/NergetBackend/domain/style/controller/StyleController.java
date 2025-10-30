@@ -5,12 +5,17 @@ import com.seeds.NergetBackend.domain.style.dto.SwipeResponse;
 import com.seeds.NergetBackend.domain.style.service.StyleService;
 import com.seeds.NergetBackend.shared.security.JwtTokenProvider;
 import com.seeds.NergetBackend.domain.auth.repository.MemberRepository;
+import com.seeds.NergetBackend.domain.choice.entity.ImageInteraction;
+import com.seeds.NergetBackend.domain.choice.repository.ImageInteractionRepository;
+import com.seeds.NergetBackend.domain.flow.entity.ImageVector;
+import com.seeds.NergetBackend.domain.flow.repository.ImageVectorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -21,6 +26,8 @@ public class StyleController {
     private final StyleService styleService;
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
+    private final ImageInteractionRepository imageInteractionRepository;
+    private final ImageVectorRepository imageVectorRepository;
 
     /**
      * 스타일 스와이프 처리 (좋아요/싫어요)
@@ -127,34 +134,31 @@ public class StyleController {
         if (limit < 1) limit = 12;
         if (limit > 50) limit = 50;
 
-        // Authorization 검증
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("[/api/style/recommend] Missing or invalid Authorization header");
-            return ResponseEntity.status(401).body(Map.of(
-                    "error", "UNAUTHORIZED",
-                    "message", "Authorization header is required"
-            ));
+        // 사용자 조회 (Optional - 토큰이 있으면 사용자별 추천, 없으면 전체 추천)
+        Long memberId = null;
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                String email = jwtTokenProvider.getEmail(token);
+                memberId = memberRepository.findByEmail(email)
+                        .map(m -> Long.valueOf(m.getMemberId()))
+                        .orElse(1L);
+                log.info("[/api/style/recommend] user={} (id={}), page={}, limit={}", 
+                        email, memberId, page, limit);
+            } catch (Exception e) {
+                log.warn("[/api/style/recommend] Token validation failed, proceeding without auth: {}", e.getMessage());
+                // 토큰이 잘못되었어도 계속 진행 (전체 추천)
+            }
+        } else {
+            log.info("[/api/style/recommend] No auth header, returning general recommendations. page={}, limit={}", 
+                    page, limit);
         }
 
-        String token = authHeader.substring(7);
-        String email;
-        try {
-            email = jwtTokenProvider.getEmail(token);
-        } catch (Exception e) {
-            log.error("[/api/style/recommend] Token validation failed", e);
-            return ResponseEntity.status(401).body(Map.of(
-                    "error", "UNAUTHORIZED",
-                    "message", "Invalid or expired token"
-            ));
+        // memberId가 null이면 1L 사용 (전체 추천)
+        if (memberId == null) {
+            memberId = 1L;
         }
-
-        // 사용자 조회
-        Long memberId = memberRepository.findByEmail(email)
-                .map(m -> Long.valueOf(m.getMemberId()))
-                .orElse(1L); // 테스트 편의상 기본값
-
-        log.info("[/api/style/recommend] user={} (id={}), page={}, limit={}", 
-                email, memberId, page, limit);
 
         try {
             return styleService.getRecommendations(memberId, page, limit);
@@ -166,5 +170,130 @@ public class StyleController {
             ));
         }
     }
+
+    /**
+     * 사용자 프로필 이미지 조회
+     * GET /api/users/profile/image
+     * Headers: Authorization: Bearer <token>
+     */
+    @GetMapping("/users/profile/image")
+    public ResponseEntity<?> getProfileImage(
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        try {
+            // 사용자 조회
+            Long memberId = getMemberIdFromAuth(authHeader);
+            if (memberId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "error", "UNAUTHORIZED",
+                        "message", "Authorization required"
+                ));
+            }
+
+            // 사용자의 좋아요한 이미지 중 가장 최근 것 가져오기
+            Optional<ImageInteraction> recentLike = imageInteractionRepository.findAll()
+                    .stream()
+                    .filter(i -> i.getMemberId().equals(memberId) && i.getAction() == 1) // 좋아요만
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                    .findFirst();
+
+            if (recentLike.isPresent()) {
+                String imageVectorId = recentLike.get().getImageVectorId();
+                Optional<ImageVector> iv = imageVectorRepository.findById(imageVectorId);
+                
+                if (iv.isPresent()) {
+                    return ResponseEntity.ok(Map.of(
+                            "imageUrl", iv.get().getS3Key(),
+                            "imageId", iv.get().getId()
+                    ));
+                }
+            }
+
+            // 프로필 이미지 없으면 빈 응답
+            return ResponseEntity.status(204).build();
+            
+        } catch (Exception e) {
+            log.error("[/api/users/profile/image] Error", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "INTERNAL_ERROR",
+                    "message", "Failed to get profile image"
+            ));
+        }
+    }
+
+    /**
+     * 사용자 스타일 이미지 목록 조회
+     * GET /api/users/images
+     * Headers: Authorization: Bearer <token>
+     */
+    @GetMapping("/users/images")
+    public ResponseEntity<?> getUserImages(
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        try {
+            // 사용자 조회
+            Long memberId = getMemberIdFromAuth(authHeader);
+            if (memberId == null) {
+                return ResponseEntity.status(401).body(Map.of(
+                        "error", "UNAUTHORIZED",
+                        "message", "Authorization required"
+                ));
+            }
+
+            // 사용자의 좋아요한 이미지들
+            List<String> likedImageIds = imageInteractionRepository.findAll()
+                    .stream()
+                    .filter(i -> i.getMemberId().equals(memberId) && i.getAction() == 1)
+                    .map(ImageInteraction::getImageVectorId)
+                    .collect(Collectors.toList());
+
+            // ImageVector 조회
+            List<ImageVector> imageVectors = imageVectorRepository.findByIdIn(likedImageIds);
+
+            // DTO 변환
+            List<Map<String, Object>> images = imageVectors.stream()
+                    .map(iv -> {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("id", iv.getId());
+                        item.put("imageUrl", iv.getS3Key());
+                        item.put("createdAt", iv.getCreatedAt());
+                        return item;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of(
+                    "images", images,
+                    "count", images.size()
+            ));
+            
+        } catch (Exception e) {
+            log.error("[/api/users/images] Error", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "INTERNAL_ERROR",
+                    "message", "Failed to get user images"
+            ));
+        }
+    }
+
+    /**
+     * Authorization 헤더에서 memberId 추출
+     */
+    private Long getMemberIdFromAuth(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+
+        try {
+            String token = authHeader.substring(7);
+            String email = jwtTokenProvider.getEmail(token);
+            return memberRepository.findByEmail(email)
+                    .map(m -> Long.valueOf(m.getMemberId()))
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Failed to get memberId from token", e);
+            return null;
+        }
+    }
 }
+
 

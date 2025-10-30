@@ -217,6 +217,7 @@ public class StyleService {
                 float p1 = pref.getV1(), p2 = pref.getV2(), p3 = pref.getV3(), p4 = pref.getV4();
                 items = pageImages.stream()
                         .map(iv -> RecommendationItemDto.builder()
+                                .id(iv.getId())
                                 .imageId(iv.getId())
                                 .imageUrl(toPublicUrl(iv.getS3Key()))
                                 .score(dotProduct(iv, p1, p2, p3, p4))
@@ -235,6 +236,7 @@ public class StyleService {
 
                 items = pageImages.stream()
                         .map(iv -> RecommendationItemDto.builder()
+                                .id(iv.getId())
                                 .imageId(iv.getId())
                                 .imageUrl(toPublicUrl(iv.getS3Key()))
                                 .score(0.0f)
